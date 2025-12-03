@@ -97,7 +97,7 @@
 					"patching_rect" : [ 200.0, 30.0, 150.0, 20.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 10.0, 10.0, 150.0, 20.0 ],
-					"text" : "MIDI Effect"
+					"text" : "Sieve"
 				}
 			}
 		],
