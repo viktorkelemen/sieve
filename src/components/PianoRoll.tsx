@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Note, onPositionChange, getLoopLength } from '../player';
+import { Note, onPositionChange } from '../player';
 
 interface PianoRollProps {
   notes: Note[];

@@ -25,13 +25,13 @@ export function getIsLooping(): boolean {
   return isLooping;
 }
 
-export function play(notes: Note[]): void {
+export function play(notes: Note[], duration?: number): void {
   if (isPlaying) stop();
 
   isPlaying = true;
   currentNotes = notes;
   playStartTime = performance.now();
-  loopLength = notes.reduce((max, n) =>
+  loopLength = duration ?? notes.reduce((max, n) =>
     n.time + n.duration > max ? n.time + n.duration : max, 0);
   scheduleNotes(notes);
   startPositionUpdates();
@@ -122,4 +122,55 @@ export function stop(): void {
 
 export function getIsPlaying(): boolean {
   return isPlaying;
+}
+
+export function updateNotes(notes: Note[]): void {
+  currentNotes = notes;
+
+  // If currently playing, reschedule from current position
+  if (isPlaying) {
+    const elapsed = (performance.now() - playStartTime) / 1000;
+    const currentPosition = loopLength > 0 ? elapsed % loopLength : elapsed;
+
+    // Clear existing scheduled events
+    scheduledEvents.forEach(id => window.clearTimeout(id));
+    scheduledEvents = [];
+
+    // Schedule only notes that haven't played yet in this loop iteration
+    notes.forEach(note => {
+      if (note.time > currentPosition) {
+        const noteOnTime = (note.time - currentPosition) * 1000;
+        const noteOffTime = (note.time + note.duration - currentPosition) * 1000;
+        const velocity = Math.round(note.velocity * 127);
+
+        const onId = window.setTimeout(() => {
+          if (isPlaying) {
+            sendNoteOn(note.midi, velocity);
+          }
+        }, noteOnTime);
+        scheduledEvents.push(onId);
+
+        const offId = window.setTimeout(() => {
+          if (isPlaying) {
+            sendNoteOff(note.midi);
+          }
+        }, noteOffTime);
+        scheduledEvents.push(offId);
+      }
+    });
+
+    // Reschedule the loop end
+    const timeToEnd = (loopLength - currentPosition) * 1000 + 50;
+    const endId = window.setTimeout(() => {
+      if (isPlaying && isLooping) {
+        playStartTime = performance.now();
+        scheduleNotes(currentNotes);
+      } else {
+        isPlaying = false;
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        onStopCallback?.();
+      }
+    }, timeToEnd);
+    scheduledEvents.push(endId);
+  }
 }

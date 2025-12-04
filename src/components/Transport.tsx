@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { initMIDI, selectOutput } from '../midi-io';
-import { play, stop, getIsPlaying, setLooping, onPlaybackEnd, Note } from '../player';
+import { play, stop, getIsPlaying, setLooping, onPlaybackEnd, updateNotes, Note } from '../player';
 
 interface TransportProps {
   notes: Note[];
+  originalNotes: Note[];
   onPlayingChange: (isPlaying: boolean) => void;
 }
 
-export function Transport({ notes, onPlayingChange }: TransportProps) {
+export function Transport({ notes, originalNotes, onPlayingChange }: TransportProps) {
   const [outputs, setOutputs] = useState<MIDIOutput[]>([]);
   const [selectedOutputId, setSelectedOutputId] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -37,6 +38,12 @@ export function Transport({ notes, onPlayingChange }: TransportProps) {
     setLooping(loop);
   }, [loop]);
 
+  // Update player notes when they change (e.g., from effects)
+  useEffect(() => {
+    console.log(`Transport: updating player with ${notes.length} notes`);
+    updateNotes(notes);
+  }, [notes]);
+
   const handleOutputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
     setSelectedOutputId(id);
@@ -49,13 +56,16 @@ export function Transport({ notes, onPlayingChange }: TransportProps) {
       setIsPlaying(false);
       onPlayingChange(false);
     } else {
-      play(notes);
+      // Calculate duration from original notes to keep loop length consistent
+      const duration = originalNotes.reduce((max, n) =>
+        n.time + n.duration > max ? n.time + n.duration : max, 0);
+      play(notes, duration);
       setIsPlaying(true);
       onPlayingChange(true);
     }
   };
 
-  const canPlay = notes.length > 0 && selectedOutputId !== '';
+  const canPlay = originalNotes.length > 0 && selectedOutputId !== '';
 
   return (
     <section>
