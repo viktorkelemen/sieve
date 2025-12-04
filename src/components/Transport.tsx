@@ -15,7 +15,14 @@ export function Transport({ notes, onPlayingChange }: TransportProps) {
 
   useEffect(() => {
     initMIDI()
-      .then(setOutputs)
+      .then(outputs => {
+        setOutputs(outputs);
+        // Auto-select first output if available
+        if (outputs.length > 0 && !selectedOutputId) {
+          setSelectedOutputId(outputs[0].id);
+          selectOutput(outputs[0].id);
+        }
+      })
       .catch(err => console.error('MIDI init failed:', err));
   }, []);
 
