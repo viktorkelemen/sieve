@@ -37,7 +37,7 @@ export function App() {
       {viewMode === 'pianoroll' ? (
         <PianoRoll notes={notes} isPlaying={isPlaying} />
       ) : (
-        <ScoreView notes={notes} />
+        <ScoreView notes={notes} isPlaying={isPlaying} />
       )}
 
       <NotesList notes={notes} />

@@ -115,6 +115,21 @@ button:hover:not(:disabled) {
   overflow-x: auto;
 }
 
+.score-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .score-container svg {
   display: block;
+}
+
+.score-playhead {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: #e74c3c;
+  pointer-events: none;
 }

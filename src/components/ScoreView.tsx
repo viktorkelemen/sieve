@@ -1,10 +1,20 @@
-import { useEffect, useRef } from 'react';
-import { Renderer, Stave, StaveNote, Voice, Formatter, Accidental } from 'vexflow';
-import { Note } from '../player';
+import { useEffect, useRef, useState } from 'react';
+import { Renderer, Stave, StaveNote, Voice, Formatter, Accidental, StaveConnector } from 'vexflow';
+import { Note, onPositionChange } from '../player';
 
 interface ScoreViewProps {
   notes: Note[];
+  isPlaying: boolean;
 }
+
+const SCALE = 0.8;
+const NOTE_SPACING = 28;
+const CLEF_WIDTH = 60;
+const GRAND_STAFF_HEIGHT = 220; // Height for both staves together
+const TREBLE_OFFSET = 30;
+const BASS_OFFSET = 110;
+const PADDING = 40;
+const MIDDLE_C = 60; // MIDI note number for middle C - split point
 
 // Convert MIDI note number to VexFlow note name
 function midiToVexFlow(midi: number): { key: string; accidental?: string } {
@@ -23,115 +33,246 @@ function midiToVexFlow(midi: number): { key: string; accidental?: string } {
 
 // Quantize duration to nearest note value
 function quantizeDuration(durationSec: number, bpm: number = 120): string {
-  const beatDuration = 60 / bpm; // duration of quarter note in seconds
+  const beatDuration = 60 / bpm;
   const beats = durationSec / beatDuration;
 
-  if (beats >= 3.5) return 'w';      // whole
-  if (beats >= 1.5) return 'h';      // half
-  if (beats >= 0.75) return 'q';     // quarter
-  if (beats >= 0.375) return '8';    // eighth
-  if (beats >= 0.1875) return '16';  // sixteenth
-  return '32';                        // thirty-second
+  if (beats >= 3.5) return 'w';
+  if (beats >= 1.5) return 'h';
+  if (beats >= 0.75) return 'q';
+  if (beats >= 0.375) return '8';
+  if (beats >= 0.1875) return '16';
+  return '32';
 }
 
-// Group notes that occur at the same time (chords)
-function groupNotesIntoChords(notes: Note[], threshold: number = 0.05): Note[][] {
+interface ChordGroup {
+  time: number;
+  trebleNotes: Note[];
+  bassNotes: Note[];
+  duration: number;
+}
+
+// Group notes by time and split into treble/bass
+function groupNotesIntoChords(notes: Note[], threshold: number = 0.05): ChordGroup[] {
   if (notes.length === 0) return [];
 
   const sorted = [...notes].sort((a, b) => a.time - b.time);
-  const groups: Note[][] = [];
+  const groups: ChordGroup[] = [];
   let currentGroup: Note[] = [sorted[0]];
 
   for (let i = 1; i < sorted.length; i++) {
     if (sorted[i].time - sorted[i - 1].time < threshold) {
       currentGroup.push(sorted[i]);
     } else {
-      groups.push(currentGroup);
+      // Split into treble and bass
+      const treble = currentGroup.filter(n => n.midi >= MIDDLE_C);
+      const bass = currentGroup.filter(n => n.midi < MIDDLE_C);
+      const maxDuration = Math.max(...currentGroup.map(n => n.duration));
+
+      groups.push({
+        time: currentGroup[0].time,
+        trebleNotes: treble,
+        bassNotes: bass,
+        duration: maxDuration
+      });
+
       currentGroup = [sorted[i]];
     }
   }
-  groups.push(currentGroup);
+
+  // Don't forget the last group
+  const treble = currentGroup.filter(n => n.midi >= MIDDLE_C);
+  const bass = currentGroup.filter(n => n.midi < MIDDLE_C);
+  const maxDuration = Math.max(...currentGroup.map(n => n.duration));
+  groups.push({
+    time: currentGroup[0].time,
+    trebleNotes: treble,
+    bassNotes: bass,
+    duration: maxDuration
+  });
 
   return groups;
 }
 
-export function ScoreView({ notes }: ScoreViewProps) {
+function createStaveNote(notesArr: Note[], duration: string, clef: 'treble' | 'bass'): StaveNote | null {
+  if (notesArr.length === 0) return null;
+
+  const keys = notesArr.map(n => midiToVexFlow(n.midi));
+
+  const staveNote = new StaveNote({
+    keys: keys.map(k => k.key),
+    duration: duration,
+    clef: clef
+  });
+
+  keys.forEach((k, i) => {
+    if (k.accidental) {
+      staveNote.addModifier(new Accidental(k.accidental), i);
+    }
+  });
+
+  return staveNote;
+}
+
+export function ScoreView({ notes, isPlaying }: ScoreViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const playheadRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(800);
+  const chordGroupsRef = useRef<ChordGroup[]>([]);
+  const notesPerLineRef = useRef(16);
 
   useEffect(() => {
-    if (!containerRef.current || notes.length === 0) return;
+    onPositionChange(setPosition);
+  }, []);
 
-    // Clear previous render
+  useEffect(() => {
+    if (!wrapperRef.current) return;
+
+    const updateWidth = () => {
+      if (wrapperRef.current) {
+        setContainerWidth(wrapperRef.current.clientWidth - 20);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
+
+  // Playhead position
+  useEffect(() => {
+    if (!playheadRef.current || !isPlaying) return;
+
+    const chordGroups = chordGroupsRef.current;
+    const notesPerLine = notesPerLineRef.current;
+    if (chordGroups.length === 0) return;
+
+    let noteIndex = 0;
+    for (let i = 0; i < chordGroups.length; i++) {
+      if (chordGroups[i].time <= position) {
+        noteIndex = i;
+      } else {
+        break;
+      }
+    }
+
+    const lineIndex = Math.floor(noteIndex / notesPerLine);
+    const posInLine = noteIndex % notesPerLine;
+
+    const x = (CLEF_WIDTH + posInLine * NOTE_SPACING + 15) * SCALE;
+    const y = lineIndex * GRAND_STAFF_HEIGHT * SCALE;
+    playheadRef.current.style.transform = `translate(${x}px, ${y}px)`;
+    playheadRef.current.style.height = `${GRAND_STAFF_HEIGHT * SCALE}px`;
+  }, [position, isPlaying]);
+
+  useEffect(() => {
+    if (!containerRef.current || notes.length === 0 || containerWidth < 100) return;
+
     containerRef.current.innerHTML = '';
 
     const renderer = new Renderer(containerRef.current, Renderer.Backends.SVG);
 
-    // Group notes into chords
-    const noteGroups = groupNotesIntoChords(notes);
+    const chordGroups = groupNotesIntoChords(notes);
+    chordGroupsRef.current = chordGroups;
 
-    // Calculate dimensions
-    const notesPerStave = 8;
-    const staveCount = Math.ceil(noteGroups.length / notesPerStave);
-    const staveWidth = 400;
-    const staveHeight = 120;
-    const width = staveWidth + 50;
-    const height = staveCount * staveHeight + 50;
+    const staveWidth = (containerWidth / SCALE) - PADDING;
+    const notesPerLine = Math.max(8, Math.floor((staveWidth - CLEF_WIDTH - PADDING) / NOTE_SPACING));
+    notesPerLineRef.current = notesPerLine;
 
-    renderer.resize(width, height);
+    const lineCount = Math.ceil(chordGroups.length / notesPerLine);
+    const width = staveWidth + PADDING;
+    const height = lineCount * GRAND_STAFF_HEIGHT;
+
+    renderer.resize(width * SCALE, height * SCALE);
     const context = renderer.getContext();
+    context.scale(SCALE, SCALE);
 
-    // Create staves and render notes
-    for (let s = 0; s < staveCount; s++) {
-      const stave = new Stave(10, s * staveHeight + 10, staveWidth);
-      if (s === 0) {
-        stave.addClef('treble');
+    for (let line = 0; line < lineCount; line++) {
+      const startIdx = line * notesPerLine;
+      const endIdx = Math.min(startIdx + notesPerLine, chordGroups.length);
+      const lineChordGroups = chordGroups.slice(startIdx, endIdx);
+
+      if (lineChordGroups.length === 0) continue;
+
+      const yBase = line * GRAND_STAFF_HEIGHT;
+
+      // Create treble stave
+      const trebleStave = new Stave(10, yBase + TREBLE_OFFSET, staveWidth);
+      if (line === 0) {
+        trebleStave.addClef('treble');
       }
-      stave.setContext(context).draw();
+      trebleStave.setContext(context).draw();
 
-      // Get notes for this stave
-      const startIdx = s * notesPerStave;
-      const endIdx = Math.min(startIdx + notesPerStave, noteGroups.length);
-      const staveNoteGroups = noteGroups.slice(startIdx, endIdx);
+      // Create bass stave
+      const bassStave = new Stave(10, yBase + BASS_OFFSET, staveWidth);
+      if (line === 0) {
+        bassStave.addClef('bass');
+      }
+      bassStave.setContext(context).draw();
 
-      if (staveNoteGroups.length === 0) continue;
+      // Draw brace connector on first line
+      if (line === 0) {
+        const brace = new StaveConnector(trebleStave, bassStave);
+        brace.setType('brace');
+        brace.setContext(context).draw();
 
-      // Create VexFlow notes
-      const vexNotes: StaveNote[] = staveNoteGroups.map(group => {
-        // Use the longest note duration in the chord
-        const maxDuration = Math.max(...group.map(n => n.duration));
-        const duration = quantizeDuration(maxDuration);
+        const lineConnector = new StaveConnector(trebleStave, bassStave);
+        lineConnector.setType('singleLeft');
+        lineConnector.setContext(context).draw();
+      }
 
-        // Get all keys for the chord
-        const keys = group.map(n => midiToVexFlow(n.midi));
+      // Create notes for treble voice
+      const trebleVexNotes: StaveNote[] = [];
+      const bassVexNotes: StaveNote[] = [];
 
-        const staveNote = new StaveNote({
-          keys: keys.map(k => k.key),
-          duration: duration,
-        });
+      lineChordGroups.forEach(group => {
+        const duration = quantizeDuration(group.duration);
 
-        // Add accidentals
-        keys.forEach((k, i) => {
-          if (k.accidental) {
-            staveNote.addModifier(new Accidental(k.accidental), i);
-          }
-        });
+        // Treble notes (or rest)
+        if (group.trebleNotes.length > 0) {
+          const note = createStaveNote(group.trebleNotes, duration, 'treble');
+          if (note) trebleVexNotes.push(note);
+        } else {
+          trebleVexNotes.push(new StaveNote({ keys: ['b/4'], duration: duration + 'r', clef: 'treble' }));
+        }
 
-        return staveNote;
+        // Bass notes (or rest)
+        if (group.bassNotes.length > 0) {
+          const note = createStaveNote(group.bassNotes, duration, 'bass');
+          if (note) bassVexNotes.push(note);
+        } else {
+          bassVexNotes.push(new StaveNote({ keys: ['d/3'], duration: duration + 'r', clef: 'bass' }));
+        }
       });
 
-      // Create voice and format
+      // Draw treble voice
       try {
-        const voice = new Voice({ num_beats: staveNoteGroups.length, beat_value: 4 })
-          .setStrict(false)
-          .addTickables(vexNotes);
-
-        new Formatter().joinVoices([voice]).format([voice], staveWidth - 50);
-        voice.draw(context, stave);
+        if (trebleVexNotes.length > 0) {
+          const trebleVoice = new Voice({ num_beats: lineChordGroups.length, beat_value: 4 })
+            .setStrict(false)
+            .addTickables(trebleVexNotes);
+          new Formatter().joinVoices([trebleVoice]).format([trebleVoice], staveWidth - CLEF_WIDTH - 30);
+          trebleVoice.draw(context, trebleStave);
+        }
       } catch (e) {
-        console.warn('VexFlow rendering error:', e);
+        console.warn('Treble voice error:', e);
+      }
+
+      // Draw bass voice
+      try {
+        if (bassVexNotes.length > 0) {
+          const bassVoice = new Voice({ num_beats: lineChordGroups.length, beat_value: 4 })
+            .setStrict(false)
+            .addTickables(bassVexNotes);
+          new Formatter().joinVoices([bassVoice]).format([bassVoice], staveWidth - CLEF_WIDTH - 30);
+          bassVoice.draw(context, bassStave);
+        }
+      } catch (e) {
+        console.warn('Bass voice error:', e);
       }
     }
-  }, [notes]);
+  }, [notes, containerWidth]);
 
   if (notes.length === 0) {
     return null;
@@ -140,7 +281,14 @@ export function ScoreView({ notes }: ScoreViewProps) {
   return (
     <section>
       <h2>Score</h2>
-      <div className="score-container" ref={containerRef} />
+      <div className="score-container" ref={wrapperRef}>
+        <div className="score-wrapper">
+          <div ref={containerRef} />
+          {isPlaying && (
+            <div ref={playheadRef} className="score-playhead" />
+          )}
+        </div>
+      </div>
     </section>
   );
 }
