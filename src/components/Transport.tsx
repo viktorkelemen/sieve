@@ -4,9 +4,10 @@ import { play, stop, getIsPlaying, setLooping, onPlaybackEnd, Note } from '../pl
 
 interface TransportProps {
   notes: Note[];
+  onPlayingChange: (isPlaying: boolean) => void;
 }
 
-export function Transport({ notes }: TransportProps) {
+export function Transport({ notes, onPlayingChange }: TransportProps) {
   const [outputs, setOutputs] = useState<MIDIOutput[]>([]);
   const [selectedOutputId, setSelectedOutputId] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -19,8 +20,11 @@ export function Transport({ notes }: TransportProps) {
   }, []);
 
   useEffect(() => {
-    onPlaybackEnd(() => setIsPlaying(false));
-  }, []);
+    onPlaybackEnd(() => {
+      setIsPlaying(false);
+      onPlayingChange(false);
+    });
+  }, [onPlayingChange]);
 
   useEffect(() => {
     setLooping(loop);
@@ -36,9 +40,11 @@ export function Transport({ notes }: TransportProps) {
     if (getIsPlaying()) {
       stop();
       setIsPlaying(false);
+      onPlayingChange(false);
     } else {
       play(notes);
       setIsPlaying(true);
+      onPlayingChange(true);
     }
   };
 
