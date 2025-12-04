@@ -1,0 +1,31 @@
+{
+  "name": "sieve",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viktorkelemen/sieve.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/viktorkelemen/sieve/issues"
+  },
+  "homepage": "https://github.com/viktorkelemen/sieve#readme",
+  "description": "",
+  "dependencies": {
+    "@tonejs/midi": "^2.0.28",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6"
+  },
+  "devDependencies": {
+    "@types/webmidi": "^2.1.0"
+  }
+}
