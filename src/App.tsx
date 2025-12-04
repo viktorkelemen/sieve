@@ -16,6 +16,7 @@ export function App() {
   return (
     <div id="app">
       <MidiFileLoader onLoad={setNotes} />
+      <Transport notes={notes} onPlayingChange={setIsPlaying} />
 
       {notes.length > 0 && (
         <div className="view-toggle">
@@ -41,7 +42,6 @@ export function App() {
       )}
 
       <NotesList notes={notes} />
-      <Transport notes={notes} onPlayingChange={setIsPlaying} />
     </div>
   );
 }
