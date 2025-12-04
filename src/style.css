@@ -89,3 +89,32 @@ button:hover:not(:disabled) {
 .piano-roll-container canvas {
   display: block;
 }
+
+.view-toggle {
+  margin-bottom: 20px;
+}
+
+.view-toggle button {
+  background: #333;
+  color: #888;
+}
+
+.view-toggle button.active {
+  background: #4a9eff;
+  color: white;
+}
+
+.view-toggle button:hover:not(.active) {
+  background: #444;
+}
+
+.score-container {
+  background: #fff;
+  border-radius: 4px;
+  padding: 10px;
+  overflow-x: auto;
+}
+
+.score-container svg {
+  display: block;
+}
