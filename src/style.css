@@ -28,20 +28,6 @@ section {
   border-radius: 8px;
 }
 
-.drop-zone {
-  border: 2px dashed #444;
-  padding: 40px;
-  text-align: center;
-  color: #666;
-  border-radius: 4px;
-  margin-top: 10px;
-}
-
-.drop-zone.dragover {
-  border-color: #888;
-  background: #333;
-}
-
 .notes-list {
   font-family: monospace;
   font-size: 12px;

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Midi } from '@tonejs/midi';
 import { Note } from '../player';
 
@@ -7,8 +7,6 @@ interface MidiFileLoaderProps {
 }
 
 export function MidiFileLoader({ onLoad }: MidiFileLoaderProps) {
-  const [isDragOver, setIsDragOver] = useState(false);
-
   const parseMidiFile = useCallback(async (file: File) => {
     const arrayBuffer = await file.arrayBuffer();
     const midi = new Midi(arrayBuffer);
@@ -34,24 +32,6 @@ export function MidiFileLoader({ onLoad }: MidiFileLoaderProps) {
     if (file) parseMidiFile(file);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const file = e.dataTransfer?.files[0];
-    if (file && (file.name.endsWith('.mid') || file.name.endsWith('.midi'))) {
-      parseMidiFile(file);
-    }
-  };
-
   return (
     <section>
       <h2>Load MIDI</h2>
@@ -60,14 +40,6 @@ export function MidiFileLoader({ onLoad }: MidiFileLoaderProps) {
         accept=".mid,.midi"
         onChange={handleFileInput}
       />
-      <p
-        className={`drop-zone ${isDragOver ? 'dragover' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        or drag and drop a MIDI file here
-      </p>
     </section>
   );
 }
