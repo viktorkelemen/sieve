@@ -22,10 +22,15 @@
   "description": "",
   "dependencies": {
     "@tonejs/midi": "^2.0.28",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "typescript": "^5.9.3",
     "vite": "^7.2.6"
   },
   "devDependencies": {
-    "@types/webmidi": "^2.1.0"
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/webmidi": "^2.1.0",
+    "@vitejs/plugin-react": "^5.1.1"
   }
 }

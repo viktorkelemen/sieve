@@ -9,14 +9,30 @@ export interface Note {
 }
 
 let isPlaying = false;
-let startTime = 0;
+let isLooping = false;
+let currentNotes: Note[] = [];
 let scheduledEvents: number[] = []; // timeout IDs
 
-export function play(notes: Note[], bpm: number = 120): void {
+export function setLooping(loop: boolean): void {
+  isLooping = loop;
+}
+
+export function getIsLooping(): boolean {
+  return isLooping;
+}
+
+export function play(notes: Note[]): void {
   if (isPlaying) stop();
 
   isPlaying = true;
-  startTime = performance.now();
+  currentNotes = notes;
+  scheduleNotes(notes);
+}
+
+function scheduleNotes(notes: Note[]): void {
+  // Clear any existing scheduled events
+  scheduledEvents.forEach(id => window.clearTimeout(id));
+  scheduledEvents = [];
 
   // Schedule all notes
   notes.forEach(note => {
@@ -41,13 +57,17 @@ export function play(notes: Note[], bpm: number = 120): void {
     scheduledEvents.push(offId);
   });
 
-  // Schedule end of playback
-  const lastNote = notes.reduce((max, n) =>
+  // Schedule end of playback or loop restart
+  const loopLength = notes.reduce((max, n) =>
     n.time + n.duration > max ? n.time + n.duration : max, 0);
   const endId = window.setTimeout(() => {
-    isPlaying = false;
-    onStopCallback?.();
-  }, lastNote * 1000 + 100);
+    if (isPlaying && isLooping) {
+      scheduleNotes(currentNotes);
+    } else {
+      isPlaying = false;
+      onStopCallback?.();
+    }
+  }, loopLength * 1000 + 50);
   scheduledEvents.push(endId);
 }
 

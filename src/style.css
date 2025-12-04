@@ -28,7 +28,7 @@ section {
   border-radius: 8px;
 }
 
-#drop-zone {
+.drop-zone {
   border: 2px dashed #444;
   padding: 40px;
   text-align: center;
@@ -37,12 +37,12 @@ section {
   margin-top: 10px;
 }
 
-#drop-zone.dragover {
+.drop-zone.dragover {
   border-color: #888;
   background: #333;
 }
 
-#notes-list {
+.notes-list {
   font-family: monospace;
   font-size: 12px;
   max-height: 300px;
@@ -84,4 +84,13 @@ button:disabled {
 
 button:hover:not(:disabled) {
   background: #3a8eef;
+}
+
+.loop-label {
+  color: #888;
+  cursor: pointer;
+}
+
+.loop-label input {
+  margin-right: 6px;
 }

@@ -4,31 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sieve</title>
-    <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div id="app">
-      <h1>Sieve</h1>
-
-      <section id="midi-input">
-        <h2>Load MIDI</h2>
-        <input type="file" id="file-input" accept=".mid,.midi" />
-        <p id="drop-zone">or drag and drop a MIDI file here</p>
-      </section>
-
-      <section id="notes-display">
-        <h2>Notes</h2>
-        <div id="notes-list"></div>
-      </section>
-
-      <section id="midi-output">
-        <h2>MIDI Output</h2>
-        <select id="output-select">
-          <option value="">Select MIDI output...</option>
-        </select>
-        <button id="play-btn" disabled>Play</button>
-      </section>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
