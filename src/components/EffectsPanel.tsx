@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { BreathPatternOptions, NoteSkipOptions } from '../effects';
+import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions } from '../effects';
 
 interface EffectsPanelProps {
   onBreathPatternChange: (enabled: boolean, options: BreathPatternOptions) => void;
   onNoteSkipChange: (enabled: boolean, options: NoteSkipOptions) => void;
+  onPointillistDecayChange: (enabled: boolean, options: PointillistDecayOptions) => void;
 }
 
-export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: EffectsPanelProps) {
+export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange }: EffectsPanelProps) {
   // Breath Pattern state
   const [breathEnabled, setBreathEnabled] = useState(false);
   const [breathDuration, setBreathDuration] = useState(4);
@@ -17,6 +18,10 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: Effect
   const [skipPlay, setSkipPlay] = useState(1);
   const [skipSkip, setSkipSkip] = useState(1);
   const [skipOffset, setSkipOffset] = useState(0);
+
+  // Pointillist Decay state
+  const [decayEnabled, setDecayEnabled] = useState(false);
+  const [decayFactor, setDecayFactor] = useState(0.5);
 
   const handleBreathToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEnabled = e.target.checked;
@@ -78,6 +83,20 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: Effect
     }
   };
 
+  const handleDecayToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEnabled = e.target.checked;
+    setDecayEnabled(newEnabled);
+    onPointillistDecayChange(newEnabled, { decayFactor, minDuration: 0.01 });
+  };
+
+  const handleDecayFactorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    setDecayFactor(value);
+    if (decayEnabled) {
+      onPointillistDecayChange(decayEnabled, { decayFactor: value, minDuration: 0.01 });
+    }
+  };
+
   return (
     <section>
       <h2>Effects</h2>
@@ -124,6 +143,32 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: Effect
                 step="1"
                 value={skipOffset}
                 onChange={handleOffsetChange}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="effect-control">
+        <label className="effect-toggle">
+          <input
+            type="checkbox"
+            checked={decayEnabled}
+            onChange={handleDecayToggle}
+          />
+          Pointillist Decay
+        </label>
+        {decayEnabled && (
+          <div className="effect-params">
+            <label>
+              Decay: {Math.round(decayFactor * 100)}%
+              <input
+                type="range"
+                min="0.05"
+                max="1"
+                step="0.05"
+                value={decayFactor}
+                onChange={handleDecayFactorChange}
               />
             </label>
           </div>

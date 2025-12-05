@@ -9,10 +9,15 @@ export type { BreathPatternOptions } from './breathPattern';
 export { applyNoteSkip } from './noteSkip';
 export type { NoteSkipOptions } from './noteSkip';
 
+// Re-export pointillist decay
+export { applyPointillistDecay } from './pointillistDecay';
+export type { PointillistDecayOptions } from './pointillistDecay';
+
 // Effects registry
 import { Effect } from './types';
 import { applyBreathPattern, BreathPatternOptions } from './breathPattern';
 import { applyNoteSkip, NoteSkipOptions } from './noteSkip';
+import { applyPointillistDecay, PointillistDecayOptions } from './pointillistDecay';
 
 export const effects: Effect[] = [
   {
@@ -22,5 +27,9 @@ export const effects: Effect[] = [
   {
     name: 'Note Skip',
     apply: (notes, options) => applyNoteSkip(notes, options as Partial<NoteSkipOptions>),
+  },
+  {
+    name: 'Pointillist Decay',
+    apply: (notes, options) => applyPointillistDecay(notes, options as Partial<PointillistDecayOptions>),
   },
 ];
