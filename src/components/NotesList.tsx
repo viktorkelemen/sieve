@@ -22,7 +22,7 @@ export function NotesList({ notes }: NotesListProps) {
         {notes.map((note, i) => (
           <div key={i} className="note">
             {i.toString().padStart(3, '0')} |{' '}
-            {midiToNoteName(note.midi).padEnd(4)} |{' '}
+            {midiToNoteName(note.midi).padEnd(7)} |{' '}
             t: {note.time.toFixed(3)}s |{' '}
             dur: {note.duration.toFixed(3)}s |{' '}
             vel: {Math.round(note.velocity * 127)}
