@@ -61,13 +61,43 @@ export function applyBreathPattern(
     })
     .filter((note): note is Note => note !== null);
 
-  console.log(`Breath pattern: ${notes.length} notes -> ${result.length} notes (cycle: ${breathDuration}s, inhale: ${inhaleRatio * 100}%)`);
   return result;
 }
 
 // Smooth easing function for natural breathing feel
 function easeInOutSine(t: number): number {
   return -(Math.cos(Math.PI * t) - 1) / 2;
+}
+
+export interface NoteSkipOptions {
+  every: number;   // Play every Nth note (2 = every other, 3 = every third)
+  offset: number;  // Which note to start from (0, 1, 2...)
+}
+
+const defaultNoteSkipOptions: NoteSkipOptions = {
+  every: 2,
+  offset: 0,
+};
+
+/**
+ * Note Skip Effect
+ *
+ * Plays every Nth note from the sequence, creating rhythmic variations.
+ * Useful for thinning out busy arps or creating polyrhythmic feels.
+ */
+export function applyNoteSkip(
+  notes: Note[],
+  options: Partial<NoteSkipOptions> = {}
+): Note[] {
+  const opts = { ...defaultNoteSkipOptions, ...options };
+  const { every, offset } = opts;
+
+  if (every <= 1) return notes;
+
+  // Sort by time to ensure consistent ordering
+  const sorted = [...notes].sort((a, b) => a.time - b.time);
+
+  return sorted.filter((_, index) => (index + offset) % every === 0);
 }
 
 // Effect registry for future effects
@@ -80,5 +110,9 @@ export const effects: Effect[] = [
   {
     name: 'Breath Pattern',
     apply: (notes, options) => applyBreathPattern(notes, options as Partial<BreathPatternOptions>),
+  },
+  {
+    name: 'Note Skip',
+    apply: (notes, options) => applyNoteSkip(notes, options as Partial<NoteSkipOptions>),
   },
 ];

@@ -40,7 +40,6 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
 
   // Update player notes when they change (e.g., from effects)
   useEffect(() => {
-    console.log(`Transport: updating player with ${notes.length} notes`);
     updateNotes(notes);
   }, [notes]);
 

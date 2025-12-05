@@ -6,13 +6,18 @@ import { ScoreView } from './components/ScoreView';
 import { Transport } from './components/Transport';
 import { EffectsPanel } from './components/EffectsPanel';
 import { Note } from './player';
-import { applyBreathPattern, BreathPatternOptions } from './effects';
+import { applyBreathPattern, applyNoteSkip, BreathPatternOptions, NoteSkipOptions } from './effects';
 
 type ViewMode = 'pianoroll' | 'score';
 
 interface BreathSettings {
   enabled: boolean;
   options: BreathPatternOptions;
+}
+
+interface NoteSkipSettings {
+  enabled: boolean;
+  options: NoteSkipOptions;
 }
 
 export function App() {
@@ -23,21 +28,43 @@ export function App() {
     enabled: false,
     options: { breathDuration: 4, inhaleRatio: 0.6, fadeEdges: 0.3 },
   });
+  const [noteSkipSettings, setNoteSkipSettings] = useState<NoteSkipSettings>({
+    enabled: false,
+    options: { every: 2, offset: 0 },
+  });
 
   const processedNotes = useMemo(() => {
-    if (!breathSettings.enabled) return notes;
-    return applyBreathPattern(notes, breathSettings.options);
-  }, [notes, breathSettings]);
+    let result = notes;
+
+    // Apply Note Skip first (reduces note count)
+    if (noteSkipSettings.enabled) {
+      result = applyNoteSkip(result, noteSkipSettings.options);
+    }
+
+    // Then apply Breath Pattern
+    if (breathSettings.enabled) {
+      result = applyBreathPattern(result, breathSettings.options);
+    }
+
+    return result;
+  }, [notes, breathSettings, noteSkipSettings]);
 
   const handleBreathPatternChange = (enabled: boolean, options: BreathPatternOptions) => {
     setBreathSettings({ enabled, options });
+  };
+
+  const handleNoteSkipChange = (enabled: boolean, options: NoteSkipOptions) => {
+    setNoteSkipSettings({ enabled, options });
   };
 
   return (
     <div id="app">
       <MidiFileLoader onLoad={setNotes} />
       <Transport notes={processedNotes} originalNotes={notes} onPlayingChange={setIsPlaying} />
-      <EffectsPanel onBreathPatternChange={handleBreathPatternChange} />
+      <EffectsPanel
+        onBreathPatternChange={handleBreathPatternChange}
+        onNoteSkipChange={handleNoteSkipChange}
+      />
 
       {notes.length > 0 && (
         <div className="view-toggle">
