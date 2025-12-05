@@ -6,7 +6,7 @@ import { ScoreView } from './components/ScoreView';
 import { Transport } from './components/Transport';
 import { EffectsPanel } from './components/EffectsPanel';
 import { Note } from './player';
-import { applyBreathPattern, applyNoteSkip, BreathPatternOptions, NoteSkipOptions } from './effects';
+import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions } from './effects';
 
 type ViewMode = 'pianoroll' | 'score';
 
@@ -20,6 +20,11 @@ interface NoteSkipSettings {
   options: NoteSkipOptions;
 }
 
+interface PointillistDecaySettings {
+  enabled: boolean;
+  options: PointillistDecayOptions;
+}
+
 export function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -30,7 +35,11 @@ export function App() {
   });
   const [noteSkipSettings, setNoteSkipSettings] = useState<NoteSkipSettings>({
     enabled: false,
-    options: { every: 2, offset: 0 },
+    options: { play: 1, skip: 1, offset: 0 },
+  });
+  const [pointillistDecaySettings, setPointillistDecaySettings] = useState<PointillistDecaySettings>({
+    enabled: false,
+    options: { decayFactor: 0.5, minDuration: 0.01 },
   });
 
   const processedNotes = useMemo(() => {
@@ -41,13 +50,18 @@ export function App() {
       result = applyNoteSkip(result, noteSkipSettings.options);
     }
 
+    // Apply Pointillist Decay (modifies duration)
+    if (pointillistDecaySettings.enabled) {
+      result = applyPointillistDecay(result, pointillistDecaySettings.options);
+    }
+
     // Then apply Breath Pattern
     if (breathSettings.enabled) {
       result = applyBreathPattern(result, breathSettings.options);
     }
 
     return result;
-  }, [notes, breathSettings, noteSkipSettings]);
+  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings]);
 
   const handleBreathPatternChange = (enabled: boolean, options: BreathPatternOptions) => {
     setBreathSettings({ enabled, options });
@@ -57,6 +71,10 @@ export function App() {
     setNoteSkipSettings({ enabled, options });
   };
 
+  const handlePointillistDecayChange = (enabled: boolean, options: PointillistDecayOptions) => {
+    setPointillistDecaySettings({ enabled, options });
+  };
+
   return (
     <div id="app">
       <MidiFileLoader onLoad={setNotes} />
@@ -64,6 +82,7 @@ export function App() {
       <EffectsPanel
         onBreathPatternChange={handleBreathPatternChange}
         onNoteSkipChange={handleNoteSkipChange}
+        onPointillistDecayChange={handlePointillistDecayChange}
       />
 
       {notes.length > 0 && (

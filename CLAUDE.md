@@ -11,6 +11,7 @@ Sieve is a browser-based MIDI processing tool that loads MIDI files, applies rea
 - `npm run dev` - Start Vite dev server
 - `npm run build` - TypeScript check + Vite production build
 - `npm run preview` - Preview production build
+- `npm test` - Run unit tests (run after major changes)
 
 ## Architecture
 
@@ -25,7 +26,7 @@ Sieve is a browser-based MIDI processing tool that loads MIDI files, applies rea
 
 - `src/player.ts` - Note scheduler with loop support and real-time note updates
 - `src/midi-io.ts` - WebMIDI wrapper (init, output selection, note on/off, panic)
-- `src/effects.ts` - Effect functions that transform `Note[]` arrays
+- `src/effects/` - Modular effects system with isolated, testable effect functions
 
 ### Note Type
 
@@ -40,11 +41,17 @@ interface Note {
 
 ### Effects System
 
-Effects are pure functions: `(notes: Note[], options) => Note[]`. Current effects:
-- **Breath Pattern** - Creates periodic gaps mimicking breathing rhythm
-- **Note Skip** - Plays every Nth note for thinning out busy sequences
+Effects are pure functions: `(notes: Note[], options) => Note[]`. The effects system is organized in `src/effects/`:
+- `types.ts` - Shared Note and Effect interfaces
+- `breathPattern.ts` - Creates periodic gaps mimicking breathing rhythm
+- `noteSkip.ts` - Play:skip ratio pattern for thinning sequences
+- `index.ts` - Re-exports and effects registry
 
-When adding new effects, follow the pattern in `effects.ts` and wire them through `App.tsx` with a useMemo chain.
+When adding new effects:
+1. Create a new file in `src/effects/` with the effect function and options interface
+2. Export from `index.ts`
+3. Add to the `effects` registry array in `index.ts`
+4. Wire through `App.tsx` with state and useMemo chain
 
 ### Visualization
 

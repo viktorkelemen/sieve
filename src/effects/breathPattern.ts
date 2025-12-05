@@ -1,4 +1,4 @@
-import { Note } from './player';
+import { Note } from './types';
 
 export interface BreathPatternOptions {
   breathDuration: number;  // Full breath cycle in seconds (inhale + exhale)
@@ -6,7 +6,7 @@ export interface BreathPatternOptions {
   fadeEdges: number;       // 0-1, how much to fade velocity at breath edges
 }
 
-const defaultBreathOptions: BreathPatternOptions = {
+const defaultOptions: BreathPatternOptions = {
   breathDuration: 4,   // 4 second breath cycle
   inhaleRatio: 0.6,    // 60% inhale (notes), 40% exhale (silence)
   fadeEdges: 0.3,      // 30% fade at edges
@@ -23,13 +23,16 @@ export function applyBreathPattern(
   notes: Note[],
   options: Partial<BreathPatternOptions> = {}
 ): Note[] {
-  const opts = { ...defaultBreathOptions, ...options };
+  const opts = { ...defaultOptions, ...options };
   const { breathDuration, inhaleRatio, fadeEdges } = opts;
+
+  // Guard against invalid duration
+  if (breathDuration <= 0) return notes;
 
   const inhaleTime = breathDuration * inhaleRatio;
   const fadeTime = inhaleTime * fadeEdges;
 
-  const result = notes
+  return notes
     .map(note => {
       // Where in the breath cycle is this note?
       const cyclePosition = note.time % breathDuration;
@@ -60,59 +63,9 @@ export function applyBreathPattern(
       };
     })
     .filter((note): note is Note => note !== null);
-
-  return result;
 }
 
 // Smooth easing function for natural breathing feel
 function easeInOutSine(t: number): number {
   return -(Math.cos(Math.PI * t) - 1) / 2;
 }
-
-export interface NoteSkipOptions {
-  every: number;   // Play every Nth note (2 = every other, 3 = every third)
-  offset: number;  // Which note to start from (0, 1, 2...)
-}
-
-const defaultNoteSkipOptions: NoteSkipOptions = {
-  every: 2,
-  offset: 0,
-};
-
-/**
- * Note Skip Effect
- *
- * Plays every Nth note from the sequence, creating rhythmic variations.
- * Useful for thinning out busy arps or creating polyrhythmic feels.
- */
-export function applyNoteSkip(
-  notes: Note[],
-  options: Partial<NoteSkipOptions> = {}
-): Note[] {
-  const opts = { ...defaultNoteSkipOptions, ...options };
-  const { every, offset } = opts;
-
-  if (every <= 1) return notes;
-
-  // Sort by time to ensure consistent ordering
-  const sorted = [...notes].sort((a, b) => a.time - b.time);
-
-  return sorted.filter((_, index) => (index + offset) % every === 0);
-}
-
-// Effect registry for future effects
-export interface Effect {
-  name: string;
-  apply: (notes: Note[], options?: Record<string, unknown>) => Note[];
-}
-
-export const effects: Effect[] = [
-  {
-    name: 'Breath Pattern',
-    apply: (notes, options) => applyBreathPattern(notes, options as Partial<BreathPatternOptions>),
-  },
-  {
-    name: 'Note Skip',
-    apply: (notes, options) => applyNoteSkip(notes, options as Partial<NoteSkipOptions>),
-  },
-];
