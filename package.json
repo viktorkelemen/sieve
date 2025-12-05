@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "type": "module",
   "repository": {
@@ -32,6 +33,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/webmidi": "^2.1.0",
-    "@vitejs/plugin-react": "^5.1.1"
+    "@vitejs/plugin-react": "^5.1.1",
+    "vitest": "^4.0.15"
   }
 }

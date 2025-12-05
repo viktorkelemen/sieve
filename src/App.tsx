@@ -30,7 +30,7 @@ export function App() {
   });
   const [noteSkipSettings, setNoteSkipSettings] = useState<NoteSkipSettings>({
     enabled: false,
-    options: { every: 2, offset: 0 },
+    options: { play: 1, skip: 1, offset: 0 },
   });
 
   const processedNotes = useMemo(() => {

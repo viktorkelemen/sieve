@@ -14,7 +14,8 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: Effect
 
   // Note Skip state
   const [skipEnabled, setSkipEnabled] = useState(false);
-  const [skipEvery, setSkipEvery] = useState(2);
+  const [skipPlay, setSkipPlay] = useState(1);
+  const [skipSkip, setSkipSkip] = useState(1);
   const [skipOffset, setSkipOffset] = useState(0);
 
   const handleBreathToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,17 +43,30 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: Effect
   const handleSkipToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEnabled = e.target.checked;
     setSkipEnabled(newEnabled);
-    onNoteSkipChange(newEnabled, { every: skipEvery, offset: skipOffset });
+    onNoteSkipChange(newEnabled, { play: skipPlay, skip: skipSkip, offset: skipOffset });
   };
 
-  const handleEveryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePlayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
-    setSkipEvery(value);
-    // Reset offset if it's >= every
-    const newOffset = skipOffset >= value ? 0 : skipOffset;
+    setSkipPlay(value);
+    // Reset offset if it's >= cycle length
+    const cycleLength = value + skipSkip;
+    const newOffset = skipOffset >= cycleLength ? 0 : skipOffset;
     setSkipOffset(newOffset);
     if (skipEnabled) {
-      onNoteSkipChange(skipEnabled, { every: value, offset: newOffset });
+      onNoteSkipChange(skipEnabled, { play: value, skip: skipSkip, offset: newOffset });
+    }
+  };
+
+  const handleSkipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setSkipSkip(value);
+    // Reset offset if it's >= cycle length
+    const cycleLength = skipPlay + value;
+    const newOffset = skipOffset >= cycleLength ? 0 : skipOffset;
+    setSkipOffset(newOffset);
+    if (skipEnabled) {
+      onNoteSkipChange(skipEnabled, { play: skipPlay, skip: value, offset: newOffset });
     }
   };
 
@@ -60,7 +74,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: Effect
     const value = parseInt(e.target.value);
     setSkipOffset(value);
     if (skipEnabled) {
-      onNoteSkipChange(skipEnabled, { every: skipEvery, offset: value });
+      onNoteSkipChange(skipEnabled, { play: skipPlay, skip: skipSkip, offset: value });
     }
   };
 
@@ -80,14 +94,25 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: Effect
         {skipEnabled && (
           <div className="effect-params">
             <label>
-              Every: {skipEvery}
+              Play: {skipPlay}
               <input
                 type="range"
-                min="2"
+                min="1"
                 max="8"
                 step="1"
-                value={skipEvery}
-                onChange={handleEveryChange}
+                value={skipPlay}
+                onChange={handlePlayChange}
+              />
+            </label>
+            <label>
+              Skip: {skipSkip}
+              <input
+                type="range"
+                min="0"
+                max="8"
+                step="1"
+                value={skipSkip}
+                onChange={handleSkipChange}
               />
             </label>
             <label>
@@ -95,7 +120,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange }: Effect
               <input
                 type="range"
                 min="0"
-                max={skipEvery - 1}
+                max={skipPlay + skipSkip - 1}
                 step="1"
                 value={skipOffset}
                 onChange={handleOffsetChange}
