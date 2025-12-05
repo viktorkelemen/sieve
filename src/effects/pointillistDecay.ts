@@ -1,7 +1,7 @@
 import { Note } from './types';
 
 export interface PointillistDecayOptions {
-  decayFactor: number;   // 0.01-1.0, multiplier for note duration
+  decayFactor: number;   // 0.05-1.0, multiplier for note duration
   minDuration: number;   // Minimum duration in seconds (floor)
 }
 
@@ -25,8 +25,8 @@ export function applyPointillistDecay(
   const opts = { ...defaultOptions, ...options };
   const { decayFactor, minDuration } = opts;
 
-  // If decay factor is 1, return unchanged
-  if (decayFactor >= 1) return notes;
+  // If decay factor is 1 or invalid, return unchanged
+  if (decayFactor >= 1 || decayFactor <= 0) return notes;
 
   return notes.map(note => ({
     ...note,
