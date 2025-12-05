@@ -1,9 +1,10 @@
 // WebMIDI handling
+// Using WebMidi namespace from @types/webmidi
 
-let midiAccess: MIDIAccess | null = null;
-let selectedOutput: MIDIOutput | null = null;
+let midiAccess: WebMidi.MIDIAccess | null = null;
+let selectedOutput: WebMidi.MIDIOutput | null = null;
 
-export async function initMIDI(): Promise<MIDIOutput[]> {
+export async function initMIDI(): Promise<WebMidi.MIDIOutput[]> {
   if (!navigator.requestMIDIAccess) {
     throw new Error('WebMIDI not supported in this browser');
   }
@@ -12,9 +13,19 @@ export async function initMIDI(): Promise<MIDIOutput[]> {
   return getOutputs();
 }
 
-export function getOutputs(): MIDIOutput[] {
+export function getOutputs(): WebMidi.MIDIOutput[] {
   if (!midiAccess) return [];
   return Array.from(midiAccess.outputs.values());
+}
+
+export function getInputs(): WebMidi.MIDIInput[] {
+  if (!midiAccess) return [];
+  return Array.from(midiAccess.inputs.values());
+}
+
+export function getInputById(id: string): WebMidi.MIDIInput | null {
+  if (!midiAccess) return null;
+  return midiAccess.inputs.get(id) || null;
 }
 
 export function selectOutput(id: string): void {

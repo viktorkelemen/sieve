@@ -165,3 +165,14 @@ button:hover:not(:disabled) {
   width: 200px;
   margin-top: 4px;
 }
+
+.bpm-display {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 4px 10px;
+  background: #333;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  color: #4a9eff;
+}

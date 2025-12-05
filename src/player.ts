@@ -54,6 +54,11 @@ export function onPositionChange(callback: (time: number) => void): void {
   positionCallback = callback;
 }
 
+// Allow external sources (like clock-player) to update position
+export function emitPosition(time: number): void {
+  positionCallback?.(time);
+}
+
 export function getLoopLength(): number {
   return loopLength;
 }

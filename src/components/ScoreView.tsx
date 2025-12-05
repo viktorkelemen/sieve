@@ -249,7 +249,7 @@ export function ScoreView({ notes, isPlaying }: ScoreViewProps) {
       // Draw treble voice
       try {
         if (trebleVexNotes.length > 0) {
-          const trebleVoice = new Voice({ num_beats: lineChordGroups.length, beat_value: 4 })
+          const trebleVoice = new Voice({ numBeats: lineChordGroups.length, beatValue: 4 })
             .setStrict(false)
             .addTickables(trebleVexNotes);
           new Formatter().joinVoices([trebleVoice]).format([trebleVoice], staveWidth - CLEF_WIDTH - 30);
@@ -262,7 +262,7 @@ export function ScoreView({ notes, isPlaying }: ScoreViewProps) {
       // Draw bass voice
       try {
         if (bassVexNotes.length > 0) {
-          const bassVoice = new Voice({ num_beats: lineChordGroups.length, beat_value: 4 })
+          const bassVoice = new Voice({ numBeats: lineChordGroups.length, beatValue: 4 })
             .setStrict(false)
             .addTickables(bassVexNotes);
           new Formatter().joinVoices([bassVoice]).format([bassVoice], staveWidth - CLEF_WIDTH - 30);
