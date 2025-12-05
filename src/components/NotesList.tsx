@@ -6,9 +6,12 @@ interface NotesListProps {
 
 function midiToNoteName(midi: number): string {
   const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const octave = Math.floor(midi / 12) - 1;
-  const note = names[midi % 12];
-  return note + octave;
+  const roundedMidi = Math.round(midi);
+  const octave = Math.floor(roundedMidi / 12) - 1;
+  const note = names[roundedMidi % 12];
+  const cents = Math.round((midi - roundedMidi) * 100);
+  const centsStr = cents !== 0 ? (cents > 0 ? `+${cents}` : `${cents}`) : '';
+  return note + octave + centsStr;
 }
 
 export function NotesList({ notes }: NotesListProps) {
@@ -19,7 +22,7 @@ export function NotesList({ notes }: NotesListProps) {
         {notes.map((note, i) => (
           <div key={i} className="note">
             {i.toString().padStart(3, '0')} |{' '}
-            {midiToNoteName(note.midi).padEnd(4)} |{' '}
+            {midiToNoteName(note.midi).padEnd(7)} |{' '}
             t: {note.time.toFixed(3)}s |{' '}
             dur: {note.duration.toFixed(3)}s |{' '}
             vel: {Math.round(note.velocity * 127)}
