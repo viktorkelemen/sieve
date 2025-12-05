@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Midi } from '@tonejs/midi';
 import { Note } from '../player';
 
@@ -6,24 +6,40 @@ interface MidiFileLoaderProps {
   onLoad: (notes: Note[]) => void;
 }
 
-export function MidiFileLoader({ onLoad }: MidiFileLoaderProps) {
-  const parseMidiFile = useCallback(async (file: File) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const midi = new Midi(arrayBuffer);
+function parseMidi(arrayBuffer: ArrayBuffer): Note[] {
+  const midi = new Midi(arrayBuffer);
+  const notes: Note[] = [];
 
-    const notes: Note[] = [];
-    midi.tracks.forEach(track => {
-      track.notes.forEach(note => {
-        notes.push({
-          midi: note.midi,
-          time: note.time,
-          duration: note.duration,
-          velocity: note.velocity
-        });
+  midi.tracks.forEach(track => {
+    track.notes.forEach(note => {
+      notes.push({
+        midi: note.midi,
+        time: note.time,
+        duration: note.duration,
+        velocity: note.velocity
       });
     });
+  });
 
-    notes.sort((a, b) => a.time - b.time);
+  notes.sort((a, b) => a.time - b.time);
+  return notes;
+}
+
+export function MidiFileLoader({ onLoad }: MidiFileLoaderProps) {
+  // Load demo file on mount
+  useEffect(() => {
+    fetch('/demo.mid')
+      .then(res => res.arrayBuffer())
+      .then(buffer => {
+        const notes = parseMidi(buffer);
+        onLoad(notes);
+      })
+      .catch(err => console.log('No demo file found:', err));
+  }, [onLoad]);
+
+  const parseMidiFile = useCallback(async (file: File) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const notes = parseMidi(arrayBuffer);
     onLoad(notes);
   }, [onLoad]);
 
