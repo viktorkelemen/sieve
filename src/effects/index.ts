@@ -13,11 +13,16 @@ export type { NoteSkipOptions } from './noteSkip';
 export { applyPointillistDecay } from './pointillistDecay';
 export type { PointillistDecayOptions } from './pointillistDecay';
 
+// Re-export harmonic stack
+export { applyHarmonicStack } from './harmonicStack';
+export type { HarmonicStackOptions, HarmonicStackMode } from './harmonicStack';
+
 // Effects registry
 import { Effect } from './types';
 import { applyBreathPattern, BreathPatternOptions } from './breathPattern';
 import { applyNoteSkip, NoteSkipOptions } from './noteSkip';
 import { applyPointillistDecay, PointillistDecayOptions } from './pointillistDecay';
+import { applyHarmonicStack, HarmonicStackOptions } from './harmonicStack';
 
 export const effects: Effect[] = [
   {
@@ -31,5 +36,9 @@ export const effects: Effect[] = [
   {
     name: 'Pointillist Decay',
     apply: (notes, options) => applyPointillistDecay(notes, options as Partial<PointillistDecayOptions>),
+  },
+  {
+    name: 'Harmonic Stack',
+    apply: (notes, options) => applyHarmonicStack(notes, options as Partial<HarmonicStackOptions>),
   },
 ];

@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions } from '../effects';
+import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, HarmonicStackMode } from '../effects';
 
 interface EffectsPanelProps {
   onBreathPatternChange: (enabled: boolean, options: BreathPatternOptions) => void;
   onNoteSkipChange: (enabled: boolean, options: NoteSkipOptions) => void;
   onPointillistDecayChange: (enabled: boolean, options: PointillistDecayOptions) => void;
+  onHarmonicStackChange: (enabled: boolean, options: HarmonicStackOptions) => void;
 }
 
-export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange }: EffectsPanelProps) {
+export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange, onHarmonicStackChange }: EffectsPanelProps) {
   // Breath Pattern state
   const [breathEnabled, setBreathEnabled] = useState(false);
   const [breathDuration, setBreathDuration] = useState(4);
@@ -22,6 +23,12 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
   // Pointillist Decay state
   const [decayEnabled, setDecayEnabled] = useState(false);
   const [decayFactor, setDecayFactor] = useState(0.5);
+
+  // Harmonic Stack state
+  const [stackEnabled, setStackEnabled] = useState(false);
+  const [stackMode, setStackMode] = useState<HarmonicStackMode>('octave');
+  const [detuneSpread, setDetuneSpread] = useState(12);
+  const [velocityScale, setVelocityScale] = useState(0.8);
 
   const handleBreathToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEnabled = e.target.checked;
@@ -97,6 +104,36 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
     }
   };
 
+  const handleStackToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEnabled = e.target.checked;
+    setStackEnabled(newEnabled);
+    onHarmonicStackChange(newEnabled, { mode: stackMode, detuneSpread, velocityScale });
+  };
+
+  const handleStackModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as HarmonicStackMode;
+    setStackMode(value);
+    if (stackEnabled) {
+      onHarmonicStackChange(stackEnabled, { mode: value, detuneSpread, velocityScale });
+    }
+  };
+
+  const handleDetuneSpreadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setDetuneSpread(value);
+    if (stackEnabled) {
+      onHarmonicStackChange(stackEnabled, { mode: stackMode, detuneSpread: value, velocityScale });
+    }
+  };
+
+  const handleVelocityScaleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    setVelocityScale(value);
+    if (stackEnabled) {
+      onHarmonicStackChange(stackEnabled, { mode: stackMode, detuneSpread, velocityScale: value });
+    }
+  };
+
   return (
     <section>
       <h2>Effects</h2>
@@ -169,6 +206,54 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
                 step="0.01"
                 value={decayFactor}
                 onChange={handleDecayFactorChange}
+              />
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="effect-control">
+        <label className="effect-toggle">
+          <input
+            type="checkbox"
+            checked={stackEnabled}
+            onChange={handleStackToggle}
+          />
+          Harmonic Stack
+        </label>
+        {stackEnabled && (
+          <div className="effect-params">
+            <label>
+              Mode:
+              <select value={stackMode} onChange={handleStackModeChange}>
+                <option value="detune">Detune (Supersaw)</option>
+                <option value="octave">Octave</option>
+                <option value="fifth">Fifth</option>
+                <option value="powerChord">Power Chord</option>
+              </select>
+            </label>
+            {stackMode === 'detune' && (
+              <label>
+                Spread: {detuneSpread}¢
+                <input
+                  type="range"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value={detuneSpread}
+                  onChange={handleDetuneSpreadChange}
+                />
+              </label>
+            )}
+            <label>
+              Layer Vol: {Math.round(velocityScale * 100)}%
+              <input
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value={velocityScale}
+                onChange={handleVelocityScaleChange}
               />
             </label>
           </div>
