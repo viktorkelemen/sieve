@@ -164,9 +164,9 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               Decay: {Math.round(decayFactor * 100)}%
               <input
                 type="range"
-                min="0.05"
+                min="0.01"
                 max="1"
-                step="0.05"
+                step="0.01"
                 value={decayFactor}
                 onChange={handleDecayFactorChange}
               />
