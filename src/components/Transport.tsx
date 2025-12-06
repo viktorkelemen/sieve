@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { initMIDI, selectOutput, getInputs, getInputById } from '../midi-io';
 import { play, stop, getIsPlaying, setLooping, onPlaybackEnd, updateNotes, Note } from '../player';
-import { selectClockInput, isClockRunning, getClockState } from '../midi-clock';
-import { setClockSyncEnabled, setClockSyncNotes } from '../clock-player';
+import {
+  initAudioClock,
+  setAudioClockEnabled,
+  setAudioClockInput,
+  setAudioClockNotes,
+  onAudioClockBpm,
+  onAudioClockRunning,
+  isAudioClockSupported,
+  resumeAudioContext,
+} from '../audio/audio-clock';
 
 interface TransportProps {
   notes: Note[];
@@ -19,20 +27,52 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
   const [loop, setLoop] = useState(true);
   const [clockSync, setClockSync] = useState(false);
   const [clockBpm, setClockBpm] = useState(0);
+  const [audioClockReady, setAudioClockReady] = useState(false);
+  const [audioClockSupported, setAudioClockSupported] = useState(true);
+  const audioClockInitialized = useRef(false);
 
+  // Initialize MIDI
   useEffect(() => {
     initMIDI()
       .then(outputs => {
         setOutputs(outputs);
         setInputs(getInputs());
-        // Auto-select first output if available
         if (outputs.length > 0 && !selectedOutputId) {
           setSelectedOutputId(outputs[0].id);
           selectOutput(outputs[0].id);
         }
       })
       .catch(err => console.error('MIDI init failed:', err));
+
+    // Check AudioWorklet support
+    setAudioClockSupported(isAudioClockSupported());
   }, []);
+
+  // Initialize AudioWorklet clock (requires user interaction)
+  useEffect(() => {
+    if (!audioClockInitialized.current && selectedClockInputId && audioClockSupported) {
+      audioClockInitialized.current = true;
+      initAudioClock()
+        .then(success => {
+          setAudioClockReady(success);
+          if (!success) {
+            setAudioClockSupported(false);
+          }
+        })
+        .catch(() => {
+          setAudioClockSupported(false);
+        });
+    }
+  }, [selectedClockInputId, audioClockSupported]);
+
+  // Set up audio clock callbacks
+  useEffect(() => {
+    onAudioClockBpm(bpm => setClockBpm(bpm));
+    onAudioClockRunning(running => {
+      setIsPlaying(running);
+      onPlayingChange(running);
+    });
+  }, [onPlayingChange]);
 
   useEffect(() => {
     onPlaybackEnd(() => {
@@ -45,25 +85,31 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
     setLooping(loop);
   }, [loop]);
 
-  // Update player notes when they change (e.g., from effects)
+  // Update player notes when they change
   useEffect(() => {
     updateNotes(notes);
-    // Also update clock-synced player
+    // Also update audio clock player (re-send when audioClockReady changes)
     const duration = originalNotes.reduce((max, n) =>
       n.time + n.duration > max ? n.time + n.duration : max, 0);
-    setClockSyncNotes(notes, duration);
-  }, [notes, originalNotes]);
+    setAudioClockNotes(notes, duration);
+  }, [notes, originalNotes, audioClockReady]);
 
   // Handle clock input selection
   useEffect(() => {
-    const input = selectedClockInputId ? getInputById(selectedClockInputId) : null;
-    selectClockInput(input);
-  }, [selectedClockInputId]);
+    if (selectedClockInputId && audioClockReady) {
+      const input = getInputById(selectedClockInputId);
+      if (input) {
+        setAudioClockInput(input);
+      }
+    }
+  }, [selectedClockInputId, audioClockReady]);
 
   // Handle clock sync enable/disable
   useEffect(() => {
-    setClockSyncEnabled(clockSync);
+    setAudioClockEnabled(clockSync);
     if (clockSync) {
+      // Resume audio context (required after user interaction)
+      resumeAudioContext();
       // Stop regular playback when entering clock sync mode
       if (getIsPlaying()) {
         stop();
@@ -71,24 +117,6 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
       }
     }
   }, [clockSync]);
-
-  // Poll for clock BPM updates when clock sync is enabled
-  useEffect(() => {
-    if (!clockSync) return;
-
-    const interval = setInterval(() => {
-      const state = getClockState();
-      setClockBpm(Math.round(state.bpm));
-      // Update playing state based on clock running state
-      const running = isClockRunning();
-      if (running !== isPlaying) {
-        setIsPlaying(running);
-        onPlayingChange(running);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [clockSync, isPlaying, onPlayingChange]);
 
   const handleClockInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedClockInputId(e.target.value);
@@ -116,7 +144,7 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
   };
 
   const canPlay = originalNotes.length > 0 && selectedOutputId !== '' && !clockSync;
-  const canClockSync = selectedOutputId !== '' && selectedClockInputId !== '';
+  const canClockSync = selectedOutputId !== '' && selectedClockInputId !== '' && audioClockReady;
 
   return (
     <section>
@@ -142,8 +170,17 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
         Loop
       </label>
 
-      <h2>MIDI Clock Sync</h2>
-      <select value={selectedClockInputId} onChange={handleClockInputChange}>
+      <h2>MIDI Clock Sync (AudioWorklet)</h2>
+      {!audioClockSupported && (
+        <p className="clock-warning">
+          SharedArrayBuffer not available. Enable cross-origin isolation or use Chrome/Firefox.
+        </p>
+      )}
+      <select
+        value={selectedClockInputId}
+        onChange={handleClockInputChange}
+        disabled={!audioClockSupported}
+      >
         <option value="">Select clock source...</option>
         {inputs.map(input => (
           <option key={input.id} value={input.id}>
@@ -162,6 +199,9 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
       </label>
       {clockSync && clockBpm > 0 && (
         <span className="bpm-display">{clockBpm} BPM</span>
+      )}
+      {clockSync && audioClockReady && (
+        <span className="clock-status"> (AudioWorklet)</span>
       )}
     </section>
   );

@@ -176,3 +176,18 @@ button:hover:not(:disabled) {
   font-size: 14px;
   color: #4a9eff;
 }
+
+.clock-status {
+  color: #2ecc71;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.clock-warning {
+  color: #e74c3c;
+  font-size: 12px;
+  margin: 8px 0;
+  padding: 8px;
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+}
