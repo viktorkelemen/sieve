@@ -207,6 +207,7 @@ button:hover:not(:disabled) {
   font-size: 12px;
   color: #888;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .effect-card-params input[type="range"] {

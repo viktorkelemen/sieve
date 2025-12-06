@@ -1,5 +1,13 @@
 import { useState } from 'react';
+import * as stylex from '@stylexjs/stylex';
 import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, HarmonicStackMode, StutterOptions } from '../effects';
+
+const styles = stylex.create({
+  paramLabel: {
+    minWidth: 85,
+    display: 'inline-block',
+  },
+});
 
 interface EffectsPanelProps {
   onBreathPatternChange: (enabled: boolean, options: BreathPatternOptions) => void;
@@ -239,7 +247,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
           </div>
           <div className="effect-card-params">
             <label>
-              Reps: {stutterReps}
+              <span {...stylex.props(styles.paramLabel)}>Reps: {stutterReps}</span>
               <input
                 type="range"
                 min="2"
@@ -252,7 +260,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
             <label>
-              Decay: {Math.round(stutterDecay * 100)}%
+              <span {...stylex.props(styles.paramLabel)}>Decay: {Math.round(stutterDecay * 100)}%</span>
               <input
                 type="range"
                 min="0.5"
@@ -265,7 +273,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
             <label>
-              Gap: {Math.round(stutterGap * 100)}%
+              <span {...stylex.props(styles.paramLabel)}>Gap: {Math.round(stutterGap * 100)}%</span>
               <input
                 type="range"
                 min="0"
@@ -292,7 +300,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
           </div>
           <div className="effect-card-params">
             <label>
-              Decay: {Math.round(decayFactor * 100)}%
+              <span {...stylex.props(styles.paramLabel)}>Decay: {Math.round(decayFactor * 100)}%</span>
               <input
                 type="range"
                 min="0.01"
