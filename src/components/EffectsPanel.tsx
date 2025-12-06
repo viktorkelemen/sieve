@@ -251,7 +251,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               <input
                 type="range"
                 min="2"
-                max="8"
+                max="5"
                 step="1"
                 value={stutterReps}
                 onChange={handleStutterRepsChange}
@@ -263,7 +263,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               <span {...stylex.props(styles.paramLabel)}>Decay: {Math.round(stutterDecay * 100)}%</span>
               <input
                 type="range"
-                min="0.5"
+                min="0.05"
                 max="1"
                 step="0.05"
                 value={stutterDecay}
