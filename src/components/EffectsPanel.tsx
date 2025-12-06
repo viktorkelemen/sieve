@@ -100,7 +100,14 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
     const value = parseFloat(e.target.value);
     setDecayFactor(value);
     if (decayEnabled) {
-      onPointillistDecayChange(decayEnabled, { decayFactor: value, minDuration: 0.01 });
+      // Only update local state for smooth UI
+      // onPointillistDecayChange is called in onMouseUp
+    }
+  };
+
+  const handleDecayFactorCommit = () => {
+    if (decayEnabled) {
+      onPointillistDecayChange(decayEnabled, { decayFactor, minDuration: 0.01 });
     }
   };
 
@@ -206,6 +213,8 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
                 step="0.01"
                 value={decayFactor}
                 onChange={handleDecayFactorChange}
+                onMouseUp={handleDecayFactorCommit}
+                onTouchEnd={handleDecayFactorCommit}
               />
             </label>
           </div>
