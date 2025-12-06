@@ -25,6 +25,15 @@ export type { StutterOptions } from './stutter';
 export { applyVelocityHumanize } from './velocityHumanize';
 export type { VelocityHumanizeOptions } from './velocityHumanize';
 
+// Re-export widgets
+export { EffectCard } from './EffectCard';
+export { NoteSkipWidget } from './NoteSkipWidget';
+export { StutterWidget } from './StutterWidget';
+export { VelocityHumanizeWidget } from './VelocityHumanizeWidget';
+export { DecayWidget } from './DecayWidget';
+export { HarmonicStackWidget } from './HarmonicStackWidget';
+export { BreathPatternWidget } from './BreathPatternWidget';
+
 // Effects registry
 import { Effect } from './types';
 import { applyBreathPattern, BreathPatternOptions } from './breathPattern';
