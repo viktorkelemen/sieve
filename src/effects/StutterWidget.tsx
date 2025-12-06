@@ -5,9 +5,10 @@ import { StutterOptions } from './stutter';
 
 interface StutterWidgetProps {
   onChange: (enabled: boolean, options: StutterOptions) => void;
+  disabled?: boolean;
 }
 
-export function StutterWidget({ onChange }: StutterWidgetProps) {
+export function StutterWidget({ onChange, disabled }: StutterWidgetProps) {
   const [enabled, setEnabled] = useState(false);
   const [reps, setReps] = useState(3);
   const [decay, setDecay] = useState(0.85);
@@ -37,7 +38,7 @@ export function StutterWidget({ onChange }: StutterWidgetProps) {
   };
 
   return (
-    <EffectCard title="Stutter" enabled={enabled} onToggle={handleToggle}>
+    <EffectCard title="Stutter" enabled={enabled} onToggle={handleToggle} disabled={disabled}>
       <label {...stylex.props(labelStyle)}>
         <span {...stylex.props(labelTextStyle)}>Reps: {reps}</span>
         <input

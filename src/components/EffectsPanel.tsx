@@ -32,6 +32,9 @@ interface EffectsPanelProps {
   onStutterChange: (enabled: boolean, options: StutterOptions) => void;
   onVelocityHumanizeChange: (enabled: boolean, options: VelocityHumanizeOptions) => void;
   onLegatoChange: (enabled: boolean, options: LegatoOptions) => void;
+  legatoDisabled?: boolean;
+  stutterDisabled?: boolean;
+  decayDisabled?: boolean;
 }
 
 export function EffectsPanel({
@@ -42,18 +45,21 @@ export function EffectsPanel({
   onStutterChange,
   onVelocityHumanizeChange,
   onLegatoChange,
+  legatoDisabled,
+  stutterDisabled,
+  decayDisabled,
 }: EffectsPanelProps) {
   return (
     <section>
       <h2>Effects</h2>
       <div {...stylex.props(styles.grid)}>
         <NoteSkipWidget onChange={onNoteSkipChange} />
-        <StutterWidget onChange={onStutterChange} />
+        <StutterWidget onChange={onStutterChange} disabled={stutterDisabled} />
         <VelocityHumanizeWidget onChange={onVelocityHumanizeChange} />
-        <DecayWidget onChange={onPointillistDecayChange} />
+        <DecayWidget onChange={onPointillistDecayChange} disabled={decayDisabled} />
         <HarmonicStackWidget onChange={onHarmonicStackChange} />
         <BreathPatternWidget onChange={onBreathPatternChange} />
-        <LegatoWidget onChange={onLegatoChange} />
+        <LegatoWidget onChange={onLegatoChange} disabled={legatoDisabled} />
       </div>
     </section>
   );

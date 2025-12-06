@@ -91,6 +91,11 @@ export function App() {
       result = applyHarmonicStack(result, harmonicStackSettings.options);
     }
 
+    // Apply Legato (extends notes to connect smoothly) - must run before Stutter/Decay
+    if (legatoSettings.enabled) {
+      result = applyLegato(result, legatoSettings.options);
+    }
+
     // Apply Stutter (multiplies notes with rapid repetitions)
     if (stutterSettings.enabled) {
       result = applyStutter(result, stutterSettings.options);
@@ -104,11 +109,6 @@ export function App() {
     // Apply Pointillist Decay (modifies duration)
     if (pointillistDecaySettings.enabled) {
       result = applyPointillistDecay(result, pointillistDecaySettings.options);
-    }
-
-    // Apply Legato (extends notes to connect smoothly)
-    if (legatoSettings.enabled) {
-      result = applyLegato(result, legatoSettings.options);
     }
 
     // Then apply Breath Pattern
@@ -159,6 +159,9 @@ export function App() {
         onStutterChange={handleStutterChange}
         onVelocityHumanizeChange={handleVelocityHumanizeChange}
         onLegatoChange={handleLegatoChange}
+        legatoDisabled={stutterSettings.enabled || pointillistDecaySettings.enabled}
+        stutterDisabled={legatoSettings.enabled}
+        decayDisabled={legatoSettings.enabled}
       />
 
       {notes.length > 0 && (

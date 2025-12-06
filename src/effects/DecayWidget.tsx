@@ -5,9 +5,10 @@ import { PointillistDecayOptions } from './pointillistDecay';
 
 interface DecayWidgetProps {
   onChange: (enabled: boolean, options: PointillistDecayOptions) => void;
+  disabled?: boolean;
 }
 
-export function DecayWidget({ onChange }: DecayWidgetProps) {
+export function DecayWidget({ onChange, disabled }: DecayWidgetProps) {
   const [enabled, setEnabled] = useState(false);
   const [decayFactor, setDecayFactor] = useState(0.5);
 
@@ -27,7 +28,7 @@ export function DecayWidget({ onChange }: DecayWidgetProps) {
   };
 
   return (
-    <EffectCard title="Decay" enabled={enabled} onToggle={handleToggle}>
+    <EffectCard title="Decay" enabled={enabled} onToggle={handleToggle} disabled={disabled}>
       <label {...stylex.props(labelStyle)}>
         <span {...stylex.props(labelTextStyle)}>Decay: {Math.round(decayFactor * 100)}%</span>
         <input

@@ -13,6 +13,10 @@ const styles = stylex.create({
     borderColor: '#4a9eff',
     boxShadow: '0 0 12px rgba(74, 158, 255, 0.15)',
   },
+  cardDisabled: {
+    opacity: 0.4,
+    pointerEvents: 'none',
+  },
   header: {
     display: 'flex',
     alignItems: 'center',
@@ -75,11 +79,12 @@ interface EffectCardProps {
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
   children: ReactNode;
+  disabled?: boolean;
 }
 
-export function EffectCard({ title, enabled, onToggle, children }: EffectCardProps) {
+export function EffectCard({ title, enabled, onToggle, children, disabled }: EffectCardProps) {
   return (
-    <div {...stylex.props(styles.card, enabled && styles.cardEnabled)}>
+    <div {...stylex.props(styles.card, enabled && styles.cardEnabled, disabled && styles.cardDisabled)}>
       <div {...stylex.props(styles.header, enabled && styles.headerEnabled)}>
         <input
           type="checkbox"

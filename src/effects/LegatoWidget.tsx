@@ -5,9 +5,10 @@ import { LegatoOptions } from './legato';
 
 interface LegatoWidgetProps {
   onChange: (enabled: boolean, options: LegatoOptions) => void;
+  disabled?: boolean;
 }
 
-export function LegatoWidget({ onChange }: LegatoWidgetProps) {
+export function LegatoWidget({ onChange, disabled }: LegatoWidgetProps) {
   const [enabled, setEnabled] = useState(false);
   const [overlap, setOverlap] = useState(20);
   const [maxGap, setMaxGap] = useState(0.5);
@@ -32,7 +33,7 @@ export function LegatoWidget({ onChange }: LegatoWidgetProps) {
   };
 
   return (
-    <EffectCard title="Legato" enabled={enabled} onToggle={handleToggle}>
+    <EffectCard title="Legato" enabled={enabled} onToggle={handleToggle} disabled={disabled}>
       <label {...stylex.props(labelStyle)}>
         <span {...stylex.props(labelTextStyle)}>Overlap: {overlap}ms</span>
         <input
