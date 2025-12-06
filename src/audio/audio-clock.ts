@@ -188,16 +188,19 @@ function handleMidiMessage(event: WebMidi.MIDIMessageEvent): void {
 export function setAudioClockNotes(notes: Note[], loopLength: number): void {
   if (!workletNode) return;
 
-  // Send notes to worklet
+  // Convert notes to beats (assuming 120 BPM reference for seconds-based time)
+  // 120 BPM = 2 beats per second
+  const BEATS_PER_SECOND = 2;
+
   workletNode.port.postMessage({
     type: 'notes',
     notes: notes.map(n => ({
       midi: n.midi,
-      time: n.time,
-      duration: n.duration,
+      time: n.time * BEATS_PER_SECOND,
+      duration: n.duration * BEATS_PER_SECOND,
       velocity: n.velocity,
     })),
-    loopLength,
+    loopLength: loopLength * BEATS_PER_SECOND,
   });
 }
 

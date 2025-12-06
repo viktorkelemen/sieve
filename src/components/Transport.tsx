@@ -10,6 +10,7 @@ import {
   onAudioClockRunning,
   isAudioClockSupported,
   resumeAudioContext,
+  destroyAudioClock,
 } from '../audio/audio-clock';
 
 interface TransportProps {
@@ -63,6 +64,14 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
           setAudioClockSupported(false);
         });
     }
+
+    // Cleanup on unmount
+    return () => {
+      if (audioClockInitialized.current) {
+        destroyAudioClock();
+        audioClockInitialized.current = false;
+      }
+    };
   }, [selectedClockInputId, audioClockSupported]);
 
   // Set up audio clock callbacks

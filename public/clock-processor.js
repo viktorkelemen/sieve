@@ -33,6 +33,7 @@ class ClockProcessor extends AudioWorkletProcessor {
     this.smoothedBpm = 120;
     this.samplesSinceTick = 0;
     this.totalSamples = 0;
+    this.tickHistory = []; // Circular buffer of sample times for BPM averaging
 
     // Cumulative position tracking to avoid BPM drift
     this.cumulativePosition = 0;
@@ -108,6 +109,7 @@ class ClockProcessor extends AudioWorkletProcessor {
         this.cumulativePosition = 0;
         this.activeNotes = [];
         this.samplesSinceTick = 0;
+        this.tickHistory = [];
         Atomics.store(this.sharedArray, RUNNING_STATE, 1);
         break;
 
@@ -139,25 +141,47 @@ class ClockProcessor extends AudioWorkletProcessor {
       return;
     }
 
-    // Update BPM estimate
-    if (ticksDelta > 0 && this.samplesSinceTick > 0) {
-      const samplesPerTickMeasured = this.samplesSinceTick / ticksDelta;
-      const measuredBpm = (sampleRate * 60) / (samplesPerTickMeasured * PPQ);
+    // Update BPM estimate using sliding window
+    // Store sample time of this tick
+    this.tickHistory.push(this.totalSamples);
+
+    // Keep last 24 ticks (1 beat)
+    if (this.tickHistory.length > 24) {
+      this.tickHistory.shift();
+    }
+
+    // Only calculate if we have enough history (at least 1/4 beat)
+    if (this.tickHistory.length >= 6) {
+      const oldestSample = this.tickHistory[0];
+      const newestSample = this.totalSamples;
+      const ticksInWindow = this.tickHistory.length - 1;
+
+      const samplesTotal = newestSample - oldestSample;
+      const samplesPerTickAvg = samplesTotal / ticksInWindow;
+
+      const measuredBpm = (sampleRate * 60) / (samplesPerTickAvg * PPQ);
 
       // Only update if measured BPM is within reasonable range (20-300)
       if (measuredBpm >= 20 && measuredBpm <= 300) {
-        // Exponential smoothing with adaptive rate
-        // Use faster rate (0.3) when far from estimate, slower (0.1) when close
-        const deviation = Math.abs(measuredBpm - this.smoothedBpm) / this.smoothedBpm;
-        const alpha = deviation > 0.2 ? 0.3 : 0.1;
+        // Very slow exponential smoothing for stability
+        // Alpha = 0.05 means it takes ~13 updates (0.5s at 120bpm) to reach 50% of change
+        // This filters out jitter effectively
+        const alpha = 0.05;
         this.smoothedBpm += alpha * (measuredBpm - this.smoothedBpm);
+      }
+    } else if (ticksDelta > 0 && this.samplesSinceTick > 0) {
+      // Fallback for first few ticks: instantaneous measurement
+      const samplesPerTickMeasured = this.samplesSinceTick / ticksDelta;
+      const measuredBpm = (sampleRate * 60) / (samplesPerTickMeasured * PPQ);
+      if (measuredBpm >= 20 && measuredBpm <= 300) {
+        this.smoothedBpm = measuredBpm;
       }
     }
 
-    // Calculate time delta using current BPM (avoids drift from variable BPM)
-    const secondsPerTick = 60 / (this.smoothedBpm * PPQ);
-    const timeDelta = ticksDelta * secondsPerTick;
-    this.cumulativePosition += timeDelta;
+    // Calculate position in beats directly from ticks
+    // 24 ticks = 1 beat
+    const beatsDelta = ticksDelta / PPQ;
+    this.cumulativePosition += beatsDelta;
 
     this.lastTickCount = newTickCount;
     this.samplesSinceTick = 0;
@@ -166,9 +190,11 @@ class ClockProcessor extends AudioWorkletProcessor {
     this.processNotes();
 
     // Send position update to main thread
+    // Convert beats back to seconds for UI display (assuming 120 BPM reference)
+    // This is just for visualization, actual timing is beat-based
     this.port.postMessage({
       type: 'position',
-      position: this.lastPosition,
+      position: this.lastPosition / 2, // Convert beats back to seconds (120 BPM)
       bpm: Math.round(this.smoothedBpm),
     });
   }
