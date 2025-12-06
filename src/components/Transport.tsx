@@ -37,10 +37,15 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
     initMIDI()
       .then(outputs => {
         setOutputs(outputs);
-        setInputs(getInputs());
+        const midiInputs = getInputs();
+        setInputs(midiInputs);
         if (outputs.length > 0 && !selectedOutputId) {
           setSelectedOutputId(outputs[0].id);
           selectOutput(outputs[0].id);
+        }
+        // Auto-select first clock input
+        if (midiInputs.length > 0 && !selectedClockInputId) {
+          setSelectedClockInputId(midiInputs[0].id);
         }
       })
       .catch(err => console.error('MIDI init failed:', err));
@@ -112,6 +117,13 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
       }
     }
   }, [selectedClockInputId, audioClockReady]);
+
+  // Auto-enable clock sync when ready
+  useEffect(() => {
+    if (audioClockReady && selectedClockInputId && selectedOutputId && !clockSync) {
+      setClockSync(true);
+    }
+  }, [audioClockReady, selectedClockInputId, selectedOutputId]);
 
   // Handle clock sync enable/disable
   useEffect(() => {
