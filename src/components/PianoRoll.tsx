@@ -63,7 +63,7 @@ export function PianoRoll({ notes, isPlaying }: PianoRollProps) {
         position < note.time + note.duration;
 
       ctx.fillStyle = isActive ? '#4a9eff' : '#6b8aad';
-      ctx.fillRect(x, y, w - 1, NOTE_HEIGHT - 1);
+      ctx.fillRect(x, y, Math.max(w - 1, 1), NOTE_HEIGHT - 1);
     });
 
     // Draw playhead

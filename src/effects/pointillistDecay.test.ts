@@ -131,4 +131,20 @@ describe('applyPointillistDecay', () => {
       expect(result[0].duration).toBe(0.25);
     });
   });
+
+  describe('extreme values', () => {
+    it('handles extremely small decay factors', () => {
+      const notes = makeNotes(1, 1.0);
+      // 1.0 * 0.0001 = 0.0001 -> clamped to minDuration 0.01
+      const result = applyPointillistDecay(notes, { decayFactor: 0.0001, minDuration: 0.01 });
+      expect(result[0].duration).toBe(0.01);
+    });
+
+    it('handles 0 duration input notes', () => {
+      const notes = makeNotes(1, 0);
+      // 0 * 0.5 = 0 -> clamped to minDuration 0.01
+      const result = applyPointillistDecay(notes, { decayFactor: 0.5, minDuration: 0.01 });
+      expect(result[0].duration).toBe(0.01);
+    });
+  });
 });

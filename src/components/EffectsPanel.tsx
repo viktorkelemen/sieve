@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, HarmonicStackMode } from '../effects';
+import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, HarmonicStackMode, StutterOptions } from '../effects';
 
 interface EffectsPanelProps {
   onBreathPatternChange: (enabled: boolean, options: BreathPatternOptions) => void;
   onNoteSkipChange: (enabled: boolean, options: NoteSkipOptions) => void;
   onPointillistDecayChange: (enabled: boolean, options: PointillistDecayOptions) => void;
   onHarmonicStackChange: (enabled: boolean, options: HarmonicStackOptions) => void;
+  onStutterChange: (enabled: boolean, options: StutterOptions) => void;
 }
 
-export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange, onHarmonicStackChange }: EffectsPanelProps) {
+export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange, onHarmonicStackChange, onStutterChange }: EffectsPanelProps) {
   // Breath Pattern state
   const [breathEnabled, setBreathEnabled] = useState(false);
   const [breathDuration, setBreathDuration] = useState(4);
@@ -29,6 +30,12 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
   const [stackMode, setStackMode] = useState<HarmonicStackMode>('octave');
   const [detuneSpread, setDetuneSpread] = useState(12);
   const [velocityScale, setVelocityScale] = useState(0.8);
+
+  // Stutter state
+  const [stutterEnabled, setStutterEnabled] = useState(false);
+  const [stutterReps, setStutterReps] = useState(3);
+  const [stutterDecay, setStutterDecay] = useState(0.85);
+  const [stutterGap, setStutterGap] = useState(0.1);
 
   const handleBreathToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEnabled = e.target.checked;
@@ -100,7 +107,14 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
     const value = parseFloat(e.target.value);
     setDecayFactor(value);
     if (decayEnabled) {
-      onPointillistDecayChange(decayEnabled, { decayFactor: value, minDuration: 0.01 });
+      // Only update local state for smooth UI
+      // onPointillistDecayChange is called in onMouseUp
+    }
+  };
+
+  const handleDecayFactorCommit = () => {
+    if (decayEnabled) {
+      onPointillistDecayChange(decayEnabled, { decayFactor, minDuration: 0.01 });
     }
   };
 
@@ -134,21 +148,49 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
     }
   };
 
+  const handleStutterToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEnabled = e.target.checked;
+    setStutterEnabled(newEnabled);
+    onStutterChange(newEnabled, { repetitions: stutterReps, velocityDecay: stutterDecay, gapRatio: stutterGap });
+  };
+
+  const handleStutterRepsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStutterReps(parseInt(e.target.value));
+    // Only update local state for smooth UI - onStutterChange called in commit
+  };
+
+  const handleStutterDecayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStutterDecay(parseFloat(e.target.value));
+    // Only update local state for smooth UI - onStutterChange called in commit
+  };
+
+  const handleStutterGapChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStutterGap(parseFloat(e.target.value));
+    // Only update local state for smooth UI - onStutterChange called in commit
+  };
+
+  const handleStutterCommit = () => {
+    if (stutterEnabled) {
+      onStutterChange(stutterEnabled, { repetitions: stutterReps, velocityDecay: stutterDecay, gapRatio: stutterGap });
+    }
+  };
+
   return (
     <section>
       <h2>Effects</h2>
 
-      <div className="effect-control">
-        <label className="effect-toggle">
-          <input
-            type="checkbox"
-            checked={skipEnabled}
-            onChange={handleSkipToggle}
-          />
-          Note Skip
-        </label>
-        {skipEnabled && (
-          <div className="effect-params">
+      <div className="effects-grid">
+        {/* Note Skip */}
+        <div className={`effect-card ${skipEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={skipEnabled}
+              onChange={handleSkipToggle}
+            />
+            <span>Note Skip</span>
+          </div>
+          <div className="effect-card-params">
             <label>
               Play: {skipPlay}
               <input
@@ -183,20 +225,72 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="effect-control">
-        <label className="effect-toggle">
-          <input
-            type="checkbox"
-            checked={decayEnabled}
-            onChange={handleDecayToggle}
-          />
-          Pointillist Decay
-        </label>
-        {decayEnabled && (
-          <div className="effect-params">
+        {/* Stutter */}
+        <div className={`effect-card ${stutterEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={stutterEnabled}
+              onChange={handleStutterToggle}
+            />
+            <span>Stutter</span>
+          </div>
+          <div className="effect-card-params">
+            <label>
+              Reps: {stutterReps}
+              <input
+                type="range"
+                min="2"
+                max="8"
+                step="1"
+                value={stutterReps}
+                onChange={handleStutterRepsChange}
+                onMouseUp={handleStutterCommit}
+                onTouchEnd={handleStutterCommit}
+              />
+            </label>
+            <label>
+              Decay: {Math.round(stutterDecay * 100)}%
+              <input
+                type="range"
+                min="0.5"
+                max="1"
+                step="0.05"
+                value={stutterDecay}
+                onChange={handleStutterDecayChange}
+                onMouseUp={handleStutterCommit}
+                onTouchEnd={handleStutterCommit}
+              />
+            </label>
+            <label>
+              Gap: {Math.round(stutterGap * 100)}%
+              <input
+                type="range"
+                min="0"
+                max="0.5"
+                step="0.05"
+                value={stutterGap}
+                onChange={handleStutterGapChange}
+                onMouseUp={handleStutterCommit}
+                onTouchEnd={handleStutterCommit}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Pointillist Decay */}
+        <div className={`effect-card ${decayEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={decayEnabled}
+              onChange={handleDecayToggle}
+            />
+            <span>Decay</span>
+          </div>
+          <div className="effect-card-params">
             <label>
               Decay: {Math.round(decayFactor * 100)}%
               <input
@@ -206,25 +300,26 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
                 step="0.01"
                 value={decayFactor}
                 onChange={handleDecayFactorChange}
+                onMouseUp={handleDecayFactorCommit}
+                onTouchEnd={handleDecayFactorCommit}
               />
             </label>
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="effect-control">
-        <label className="effect-toggle">
-          <input
-            type="checkbox"
-            checked={stackEnabled}
-            onChange={handleStackToggle}
-          />
-          Harmonic Stack
-        </label>
-        {stackEnabled && (
-          <div className="effect-params">
+        {/* Harmonic Stack */}
+        <div className={`effect-card ${stackEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={stackEnabled}
+              onChange={handleStackToggle}
+            />
+            <span>Harmonic Stack</span>
+          </div>
+          <div className="effect-card-params">
             <label>
-              Mode:
+              Mode
               <select value={stackMode} onChange={handleStackModeChange}>
                 <option value="detune">Detune (Supersaw)</option>
                 <option value="octave">Octave</option>
@@ -257,20 +352,19 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="effect-control">
-        <label className="effect-toggle">
-          <input
-            type="checkbox"
-            checked={breathEnabled}
-            onChange={handleBreathToggle}
-          />
-          Breath Pattern
-        </label>
-        {breathEnabled && (
-          <div className="effect-params">
+        {/* Breath Pattern */}
+        <div className={`effect-card ${breathEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={breathEnabled}
+              onChange={handleBreathToggle}
+            />
+            <span>Breath Pattern</span>
+          </div>
+          <div className="effect-card-params">
             <label>
               Cycle: {breathDuration.toFixed(1)}s
               <input
@@ -294,7 +388,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
