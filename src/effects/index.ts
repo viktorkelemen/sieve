@@ -21,6 +21,10 @@ export type { HarmonicStackOptions, HarmonicStackMode } from './harmonicStack';
 export { applyStutter } from './stutter';
 export type { StutterOptions } from './stutter';
 
+// Re-export velocity humanize
+export { applyVelocityHumanize } from './velocityHumanize';
+export type { VelocityHumanizeOptions } from './velocityHumanize';
+
 // Effects registry
 import { Effect } from './types';
 import { applyBreathPattern, BreathPatternOptions } from './breathPattern';
@@ -28,6 +32,7 @@ import { applyNoteSkip, NoteSkipOptions } from './noteSkip';
 import { applyPointillistDecay, PointillistDecayOptions } from './pointillistDecay';
 import { applyHarmonicStack, HarmonicStackOptions } from './harmonicStack';
 import { applyStutter, StutterOptions } from './stutter';
+import { applyVelocityHumanize, VelocityHumanizeOptions } from './velocityHumanize';
 
 export const effects: Effect[] = [
   {
@@ -49,5 +54,9 @@ export const effects: Effect[] = [
   {
     name: 'Stutter',
     apply: (notes, options) => applyStutter(notes, options as Partial<StutterOptions>),
+  },
+  {
+    name: 'Velocity Humanize',
+    apply: (notes, options) => applyVelocityHumanize(notes, options as Partial<VelocityHumanizeOptions>),
   },
 ];

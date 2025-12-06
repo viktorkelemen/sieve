@@ -6,7 +6,7 @@ import { ScoreView } from './components/ScoreView';
 import { Transport } from './components/Transport';
 import { EffectsPanel } from './components/EffectsPanel';
 import { Note } from './player';
-import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, applyHarmonicStack, applyStutter, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, StutterOptions } from './effects';
+import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, applyHarmonicStack, applyStutter, applyVelocityHumanize, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, StutterOptions, VelocityHumanizeOptions } from './effects';
 
 type ViewMode = 'pianoroll' | 'score';
 
@@ -35,6 +35,11 @@ interface StutterSettings {
   options: StutterOptions;
 }
 
+interface VelocityHumanizeSettings {
+  enabled: boolean;
+  options: VelocityHumanizeOptions;
+}
+
 export function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -59,6 +64,10 @@ export function App() {
     enabled: false,
     options: { repetitions: 3, velocityDecay: 0.85, gapRatio: 0.1 },
   });
+  const [velocityHumanizeSettings, setVelocityHumanizeSettings] = useState<VelocityHumanizeSettings>({
+    enabled: false,
+    options: { amount: 0.1, accentEvery: 0, accentStrength: 0.2 },
+  });
 
   const processedNotes = useMemo(() => {
     let result = notes;
@@ -78,6 +87,11 @@ export function App() {
       result = applyStutter(result, stutterSettings.options);
     }
 
+    // Apply Velocity Humanize (adds variation and accents)
+    if (velocityHumanizeSettings.enabled) {
+      result = applyVelocityHumanize(result, velocityHumanizeSettings.options);
+    }
+
     // Apply Pointillist Decay (modifies duration)
     if (pointillistDecaySettings.enabled) {
       result = applyPointillistDecay(result, pointillistDecaySettings.options);
@@ -89,7 +103,7 @@ export function App() {
     }
 
     return result;
-  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings, harmonicStackSettings, stutterSettings]);
+  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings, harmonicStackSettings, stutterSettings, velocityHumanizeSettings]);
 
   const handleBreathPatternChange = (enabled: boolean, options: BreathPatternOptions) => {
     setBreathSettings({ enabled, options });
@@ -111,6 +125,10 @@ export function App() {
     setStutterSettings({ enabled, options });
   };
 
+  const handleVelocityHumanizeChange = (enabled: boolean, options: VelocityHumanizeOptions) => {
+    setVelocityHumanizeSettings({ enabled, options });
+  };
+
   return (
     <div id="app">
       <MidiFileLoader onLoad={setNotes} />
@@ -121,6 +139,7 @@ export function App() {
         onPointillistDecayChange={handlePointillistDecayChange}
         onHarmonicStackChange={handleHarmonicStackChange}
         onStutterChange={handleStutterChange}
+        onVelocityHumanizeChange={handleVelocityHumanizeChange}
       />
 
       {notes.length > 0 && (

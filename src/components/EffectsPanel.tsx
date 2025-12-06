@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import * as stylex from '@stylexjs/stylex';
-import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, HarmonicStackMode, StutterOptions } from '../effects';
+import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, HarmonicStackMode, StutterOptions, VelocityHumanizeOptions } from '../effects';
 
 const styles = stylex.create({
   paramLabel: {
@@ -15,9 +15,10 @@ interface EffectsPanelProps {
   onPointillistDecayChange: (enabled: boolean, options: PointillistDecayOptions) => void;
   onHarmonicStackChange: (enabled: boolean, options: HarmonicStackOptions) => void;
   onStutterChange: (enabled: boolean, options: StutterOptions) => void;
+  onVelocityHumanizeChange: (enabled: boolean, options: VelocityHumanizeOptions) => void;
 }
 
-export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange, onHarmonicStackChange, onStutterChange }: EffectsPanelProps) {
+export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange, onHarmonicStackChange, onStutterChange, onVelocityHumanizeChange }: EffectsPanelProps) {
   // Breath Pattern state
   const [breathEnabled, setBreathEnabled] = useState(false);
   const [breathDuration, setBreathDuration] = useState(4);
@@ -44,6 +45,12 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
   const [stutterReps, setStutterReps] = useState(3);
   const [stutterDecay, setStutterDecay] = useState(0.85);
   const [stutterGap, setStutterGap] = useState(0.1);
+
+  // Velocity Humanize state
+  const [humanizeEnabled, setHumanizeEnabled] = useState(false);
+  const [humanizeAmount, setHumanizeAmount] = useState(0.1);
+  const [accentEvery, setAccentEvery] = useState(0);
+  const [accentStrength, setAccentStrength] = useState(0.2);
 
   const handleBreathToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEnabled = e.target.checked;
@@ -183,6 +190,33 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
     }
   };
 
+  const handleHumanizeToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEnabled = e.target.checked;
+    setHumanizeEnabled(newEnabled);
+    onVelocityHumanizeChange(newEnabled, { amount: humanizeAmount, accentEvery, accentStrength });
+  };
+
+  const handleHumanizeAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setHumanizeAmount(parseFloat(e.target.value));
+    // Only update local state for smooth UI - commit on release
+  };
+
+  const handleAccentEveryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAccentEvery(parseInt(e.target.value));
+    // Only update local state for smooth UI - commit on release
+  };
+
+  const handleAccentStrengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAccentStrength(parseFloat(e.target.value));
+    // Only update local state for smooth UI - commit on release
+  };
+
+  const handleHumanizeCommit = () => {
+    if (humanizeEnabled) {
+      onVelocityHumanizeChange(humanizeEnabled, { amount: humanizeAmount, accentEvery, accentStrength });
+    }
+  };
+
   return (
     <section>
       <h2>Effects</h2>
@@ -285,6 +319,61 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
                 onTouchEnd={handleStutterCommit}
               />
             </label>
+          </div>
+        </div>
+
+        {/* Velocity Humanize */}
+        <div className={`effect-card ${humanizeEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={humanizeEnabled}
+              onChange={handleHumanizeToggle}
+            />
+            <span>Humanize</span>
+          </div>
+          <div className="effect-card-params">
+            <label>
+              <span {...stylex.props(styles.paramLabel)}>Jitter: ±{Math.round(humanizeAmount * 100)}%</span>
+              <input
+                type="range"
+                min="0"
+                max="0.3"
+                step="0.01"
+                value={humanizeAmount}
+                onChange={handleHumanizeAmountChange}
+                onMouseUp={handleHumanizeCommit}
+                onTouchEnd={handleHumanizeCommit}
+              />
+            </label>
+            <label>
+              <span {...stylex.props(styles.paramLabel)}>Accent: {accentEvery === 0 ? 'Off' : `1/${accentEvery}`}</span>
+              <input
+                type="range"
+                min="0"
+                max="8"
+                step="1"
+                value={accentEvery}
+                onChange={handleAccentEveryChange}
+                onMouseUp={handleHumanizeCommit}
+                onTouchEnd={handleHumanizeCommit}
+              />
+            </label>
+            {accentEvery > 0 && (
+              <label>
+                <span {...stylex.props(styles.paramLabel)}>Boost: +{Math.round(accentStrength * 100)}%</span>
+                <input
+                  type="range"
+                  min="0.05"
+                  max="0.5"
+                  step="0.05"
+                  value={accentStrength}
+                  onChange={handleAccentStrengthChange}
+                  onMouseUp={handleHumanizeCommit}
+                  onTouchEnd={handleHumanizeCommit}
+                />
+              </label>
+            )}
           </div>
         </div>
 

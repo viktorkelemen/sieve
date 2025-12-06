@@ -9,6 +9,7 @@ describe('EffectsPanel', () => {
         onPointillistDecayChange: vi.fn(),
         onHarmonicStackChange: vi.fn(),
         onStutterChange: vi.fn(),
+        onVelocityHumanizeChange: vi.fn(),
     };
 
     it('renders correctly', () => {
@@ -109,11 +110,11 @@ describe('EffectsPanel', () => {
             const repsSlider = sliders?.[0];
 
             if (repsSlider) {
-                fireEvent.change(repsSlider, { target: { value: '6' } });
+                fireEvent.change(repsSlider, { target: { value: '4' } });
                 fireEvent.mouseUp(repsSlider);
 
                 expect(defaultProps.onStutterChange).toHaveBeenCalledWith(true, expect.objectContaining({
-                    repetitions: 6
+                    repetitions: 4
                 }));
             }
         });
