@@ -17,12 +17,17 @@ export type { PointillistDecayOptions } from './pointillistDecay';
 export { applyHarmonicStack } from './harmonicStack';
 export type { HarmonicStackOptions, HarmonicStackMode } from './harmonicStack';
 
+// Re-export stutter
+export { applyStutter } from './stutter';
+export type { StutterOptions } from './stutter';
+
 // Effects registry
 import { Effect } from './types';
 import { applyBreathPattern, BreathPatternOptions } from './breathPattern';
 import { applyNoteSkip, NoteSkipOptions } from './noteSkip';
 import { applyPointillistDecay, PointillistDecayOptions } from './pointillistDecay';
 import { applyHarmonicStack, HarmonicStackOptions } from './harmonicStack';
+import { applyStutter, StutterOptions } from './stutter';
 
 export const effects: Effect[] = [
   {
@@ -40,5 +45,9 @@ export const effects: Effect[] = [
   {
     name: 'Harmonic Stack',
     apply: (notes, options) => applyHarmonicStack(notes, options as Partial<HarmonicStackOptions>),
+  },
+  {
+    name: 'Stutter',
+    apply: (notes, options) => applyStutter(notes, options as Partial<StutterOptions>),
   },
 ];

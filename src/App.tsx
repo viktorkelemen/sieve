@@ -6,7 +6,7 @@ import { ScoreView } from './components/ScoreView';
 import { Transport } from './components/Transport';
 import { EffectsPanel } from './components/EffectsPanel';
 import { Note } from './player';
-import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, applyHarmonicStack, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions } from './effects';
+import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, applyHarmonicStack, applyStutter, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, StutterOptions } from './effects';
 
 type ViewMode = 'pianoroll' | 'score';
 
@@ -30,6 +30,11 @@ interface HarmonicStackSettings {
   options: HarmonicStackOptions;
 }
 
+interface StutterSettings {
+  enabled: boolean;
+  options: StutterOptions;
+}
+
 export function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -50,6 +55,10 @@ export function App() {
     enabled: false,
     options: { mode: 'octave', detuneSpread: 12, velocityScale: 0.8 },
   });
+  const [stutterSettings, setStutterSettings] = useState<StutterSettings>({
+    enabled: false,
+    options: { repetitions: 3, velocityDecay: 0.85, gapRatio: 0.1 },
+  });
 
   const processedNotes = useMemo(() => {
     let result = notes;
@@ -64,6 +73,11 @@ export function App() {
       result = applyHarmonicStack(result, harmonicStackSettings.options);
     }
 
+    // Apply Stutter (multiplies notes with rapid repetitions)
+    if (stutterSettings.enabled) {
+      result = applyStutter(result, stutterSettings.options);
+    }
+
     // Apply Pointillist Decay (modifies duration)
     if (pointillistDecaySettings.enabled) {
       result = applyPointillistDecay(result, pointillistDecaySettings.options);
@@ -75,7 +89,7 @@ export function App() {
     }
 
     return result;
-  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings, harmonicStackSettings]);
+  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings, harmonicStackSettings, stutterSettings]);
 
   const handleBreathPatternChange = (enabled: boolean, options: BreathPatternOptions) => {
     setBreathSettings({ enabled, options });
@@ -93,6 +107,10 @@ export function App() {
     setHarmonicStackSettings({ enabled, options });
   };
 
+  const handleStutterChange = (enabled: boolean, options: StutterOptions) => {
+    setStutterSettings({ enabled, options });
+  };
+
   return (
     <div id="app">
       <MidiFileLoader onLoad={setNotes} />
@@ -102,6 +120,7 @@ export function App() {
         onNoteSkipChange={handleNoteSkipChange}
         onPointillistDecayChange={handlePointillistDecayChange}
         onHarmonicStackChange={handleHarmonicStackChange}
+        onStutterChange={handleStutterChange}
       />
 
       {notes.length > 0 && (

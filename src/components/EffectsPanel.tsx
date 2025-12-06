@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, HarmonicStackMode } from '../effects';
+import { BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, HarmonicStackMode, StutterOptions } from '../effects';
 
 interface EffectsPanelProps {
   onBreathPatternChange: (enabled: boolean, options: BreathPatternOptions) => void;
   onNoteSkipChange: (enabled: boolean, options: NoteSkipOptions) => void;
   onPointillistDecayChange: (enabled: boolean, options: PointillistDecayOptions) => void;
   onHarmonicStackChange: (enabled: boolean, options: HarmonicStackOptions) => void;
+  onStutterChange: (enabled: boolean, options: StutterOptions) => void;
 }
 
-export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange, onHarmonicStackChange }: EffectsPanelProps) {
+export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointillistDecayChange, onHarmonicStackChange, onStutterChange }: EffectsPanelProps) {
   // Breath Pattern state
   const [breathEnabled, setBreathEnabled] = useState(false);
   const [breathDuration, setBreathDuration] = useState(4);
@@ -29,6 +30,12 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
   const [stackMode, setStackMode] = useState<HarmonicStackMode>('octave');
   const [detuneSpread, setDetuneSpread] = useState(12);
   const [velocityScale, setVelocityScale] = useState(0.8);
+
+  // Stutter state
+  const [stutterEnabled, setStutterEnabled] = useState(false);
+  const [stutterReps, setStutterReps] = useState(3);
+  const [stutterDecay, setStutterDecay] = useState(0.85);
+  const [stutterGap, setStutterGap] = useState(0.1);
 
   const handleBreathToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEnabled = e.target.checked;
@@ -141,6 +148,33 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
     }
   };
 
+  const handleStutterToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEnabled = e.target.checked;
+    setStutterEnabled(newEnabled);
+    onStutterChange(newEnabled, { repetitions: stutterReps, velocityDecay: stutterDecay, gapRatio: stutterGap });
+  };
+
+  const handleStutterRepsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStutterReps(parseInt(e.target.value));
+    // Only update local state for smooth UI - onStutterChange called in commit
+  };
+
+  const handleStutterDecayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStutterDecay(parseFloat(e.target.value));
+    // Only update local state for smooth UI - onStutterChange called in commit
+  };
+
+  const handleStutterGapChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStutterGap(parseFloat(e.target.value));
+    // Only update local state for smooth UI - onStutterChange called in commit
+  };
+
+  const handleStutterCommit = () => {
+    if (stutterEnabled) {
+      onStutterChange(stutterEnabled, { repetitions: stutterReps, velocityDecay: stutterDecay, gapRatio: stutterGap });
+    }
+  };
+
   return (
     <section>
       <h2>Effects</h2>
@@ -188,6 +222,59 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
                 step="1"
                 value={skipOffset}
                 onChange={handleOffsetChange}
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Stutter */}
+        <div className={`effect-card ${stutterEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={stutterEnabled}
+              onChange={handleStutterToggle}
+            />
+            <span>Stutter</span>
+          </div>
+          <div className="effect-card-params">
+            <label>
+              Reps: {stutterReps}
+              <input
+                type="range"
+                min="2"
+                max="8"
+                step="1"
+                value={stutterReps}
+                onChange={handleStutterRepsChange}
+                onMouseUp={handleStutterCommit}
+                onTouchEnd={handleStutterCommit}
+              />
+            </label>
+            <label>
+              Decay: {Math.round(stutterDecay * 100)}%
+              <input
+                type="range"
+                min="0.5"
+                max="1"
+                step="0.05"
+                value={stutterDecay}
+                onChange={handleStutterDecayChange}
+                onMouseUp={handleStutterCommit}
+                onTouchEnd={handleStutterCommit}
+              />
+            </label>
+            <label>
+              Gap: {Math.round(stutterGap * 100)}%
+              <input
+                type="range"
+                min="0"
+                max="0.5"
+                step="0.05"
+                value={stutterGap}
+                onChange={handleStutterGapChange}
+                onMouseUp={handleStutterCommit}
+                onTouchEnd={handleStutterCommit}
               />
             </label>
           </div>
