@@ -6,12 +6,14 @@ import {
   HarmonicStackOptions,
   StutterOptions,
   VelocityHumanizeOptions,
+  LegatoOptions,
   NoteSkipWidget,
   StutterWidget,
   VelocityHumanizeWidget,
   DecayWidget,
   HarmonicStackWidget,
   BreathPatternWidget,
+  LegatoWidget,
 } from '../effects';
 
 const styles = stylex.create({
@@ -29,6 +31,7 @@ interface EffectsPanelProps {
   onHarmonicStackChange: (enabled: boolean, options: HarmonicStackOptions) => void;
   onStutterChange: (enabled: boolean, options: StutterOptions) => void;
   onVelocityHumanizeChange: (enabled: boolean, options: VelocityHumanizeOptions) => void;
+  onLegatoChange: (enabled: boolean, options: LegatoOptions) => void;
 }
 
 export function EffectsPanel({
@@ -38,6 +41,7 @@ export function EffectsPanel({
   onHarmonicStackChange,
   onStutterChange,
   onVelocityHumanizeChange,
+  onLegatoChange,
 }: EffectsPanelProps) {
   return (
     <section>
@@ -49,6 +53,7 @@ export function EffectsPanel({
         <DecayWidget onChange={onPointillistDecayChange} />
         <HarmonicStackWidget onChange={onHarmonicStackChange} />
         <BreathPatternWidget onChange={onBreathPatternChange} />
+        <LegatoWidget onChange={onLegatoChange} />
       </div>
     </section>
   );

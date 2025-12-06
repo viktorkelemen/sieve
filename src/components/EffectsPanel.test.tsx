@@ -10,6 +10,7 @@ describe('EffectsPanel', () => {
         onHarmonicStackChange: vi.fn(),
         onStutterChange: vi.fn(),
         onVelocityHumanizeChange: vi.fn(),
+        onLegatoChange: vi.fn(),
     };
 
     it('renders all effect widgets', () => {
@@ -22,5 +23,6 @@ describe('EffectsPanel', () => {
         expect(screen.getByText('Decay')).toBeDefined();
         expect(screen.getByText('Harmonic Stack')).toBeDefined();
         expect(screen.getByText('Breath Pattern')).toBeDefined();
+        expect(screen.getByText('Legato')).toBeDefined();
     });
 });

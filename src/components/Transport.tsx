@@ -118,13 +118,6 @@ export function Transport({ notes, originalNotes, onPlayingChange }: TransportPr
     }
   }, [selectedClockInputId, audioClockReady]);
 
-  // Auto-enable clock sync when ready
-  useEffect(() => {
-    if (audioClockReady && selectedClockInputId && selectedOutputId && !clockSync) {
-      setClockSync(true);
-    }
-  }, [audioClockReady, selectedClockInputId, selectedOutputId]);
-
   // Handle clock sync enable/disable
   useEffect(() => {
     setAudioClockEnabled(clockSync);

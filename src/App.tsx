@@ -6,7 +6,7 @@ import { ScoreView } from './components/ScoreView';
 import { Transport } from './components/Transport';
 import { EffectsPanel } from './components/EffectsPanel';
 import { Note } from './player';
-import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, applyHarmonicStack, applyStutter, applyVelocityHumanize, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, StutterOptions, VelocityHumanizeOptions } from './effects';
+import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, applyHarmonicStack, applyStutter, applyVelocityHumanize, applyLegato, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, StutterOptions, VelocityHumanizeOptions, LegatoOptions } from './effects';
 
 type ViewMode = 'pianoroll' | 'score';
 
@@ -40,6 +40,11 @@ interface VelocityHumanizeSettings {
   options: VelocityHumanizeOptions;
 }
 
+interface LegatoSettings {
+  enabled: boolean;
+  options: LegatoOptions;
+}
+
 export function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -67,6 +72,10 @@ export function App() {
   const [velocityHumanizeSettings, setVelocityHumanizeSettings] = useState<VelocityHumanizeSettings>({
     enabled: false,
     options: { amount: 0.1, accentEvery: 0, accentStrength: 0.2 },
+  });
+  const [legatoSettings, setLegatoSettings] = useState<LegatoSettings>({
+    enabled: false,
+    options: { overlap: 20, maxGap: 0.5 },
   });
 
   const processedNotes = useMemo(() => {
@@ -97,13 +106,18 @@ export function App() {
       result = applyPointillistDecay(result, pointillistDecaySettings.options);
     }
 
+    // Apply Legato (extends notes to connect smoothly)
+    if (legatoSettings.enabled) {
+      result = applyLegato(result, legatoSettings.options);
+    }
+
     // Then apply Breath Pattern
     if (breathSettings.enabled) {
       result = applyBreathPattern(result, breathSettings.options);
     }
 
     return result;
-  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings, harmonicStackSettings, stutterSettings, velocityHumanizeSettings]);
+  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings, harmonicStackSettings, stutterSettings, velocityHumanizeSettings, legatoSettings]);
 
   const handleBreathPatternChange = (enabled: boolean, options: BreathPatternOptions) => {
     setBreathSettings({ enabled, options });
@@ -129,6 +143,10 @@ export function App() {
     setVelocityHumanizeSettings({ enabled, options });
   };
 
+  const handleLegatoChange = (enabled: boolean, options: LegatoOptions) => {
+    setLegatoSettings({ enabled, options });
+  };
+
   return (
     <div id="app">
       <MidiFileLoader onLoad={setNotes} />
@@ -140,6 +158,7 @@ export function App() {
         onHarmonicStackChange={handleHarmonicStackChange}
         onStutterChange={handleStutterChange}
         onVelocityHumanizeChange={handleVelocityHumanizeChange}
+        onLegatoChange={handleLegatoChange}
       />
 
       {notes.length > 0 && (

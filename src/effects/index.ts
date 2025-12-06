@@ -25,6 +25,10 @@ export type { StutterOptions } from './stutter';
 export { applyVelocityHumanize } from './velocityHumanize';
 export type { VelocityHumanizeOptions } from './velocityHumanize';
 
+// Re-export legato
+export { applyLegato } from './legato';
+export type { LegatoOptions } from './legato';
+
 // Re-export widgets
 export { EffectCard } from './EffectCard';
 export { NoteSkipWidget } from './NoteSkipWidget';
@@ -33,6 +37,7 @@ export { VelocityHumanizeWidget } from './VelocityHumanizeWidget';
 export { DecayWidget } from './DecayWidget';
 export { HarmonicStackWidget } from './HarmonicStackWidget';
 export { BreathPatternWidget } from './BreathPatternWidget';
+export { LegatoWidget } from './LegatoWidget';
 
 // Effects registry
 import { Effect } from './types';
@@ -42,6 +47,7 @@ import { applyPointillistDecay, PointillistDecayOptions } from './pointillistDec
 import { applyHarmonicStack, HarmonicStackOptions } from './harmonicStack';
 import { applyStutter, StutterOptions } from './stutter';
 import { applyVelocityHumanize, VelocityHumanizeOptions } from './velocityHumanize';
+import { applyLegato, LegatoOptions } from './legato';
 
 export const effects: Effect[] = [
   {
@@ -67,5 +73,9 @@ export const effects: Effect[] = [
   {
     name: 'Velocity Humanize',
     apply: (notes, options) => applyVelocityHumanize(notes, options as Partial<VelocityHumanizeOptions>),
+  },
+  {
+    name: 'Legato',
+    apply: (notes, options) => applyLegato(notes, options as Partial<LegatoOptions>),
   },
 ];
