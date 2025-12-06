@@ -47,10 +47,36 @@ export function HarmonicStackWidget({ onChange }: HarmonicStackWidgetProps) {
       <label {...stylex.props(labelStyle)}>
         <span {...stylex.props(labelTextStyle)}>Mode</span>
         <select value={mode} onChange={handleModeChange} {...stylex.props(sliderStyle)}>
-          <option value="detune">Detune (Supersaw)</option>
-          <option value="octave">Octave</option>
-          <option value="fifth">Fifth</option>
-          <option value="powerChord">Power Chord</option>
+          <optgroup label="Basic">
+            <option value="detune">Detune (Supersaw)</option>
+            <option value="octave">Octave</option>
+            <option value="fifth">Fifth</option>
+            <option value="powerChord">Power Chord</option>
+          </optgroup>
+          <optgroup label="Thirds">
+            <option value="majorThird">Major Third</option>
+            <option value="minorThird">Minor Third</option>
+          </optgroup>
+          <optgroup label="Triads">
+            <option value="triad">Major Triad</option>
+            <option value="minorTriad">Minor Triad</option>
+            <option value="sus2">Sus2</option>
+            <option value="sus4">Sus4</option>
+          </optgroup>
+          <optgroup label="Extended">
+            <option value="seventh">Major 7th</option>
+            <option value="minorSeventh">Minor 7th</option>
+            <option value="add9">Add9</option>
+          </optgroup>
+          <optgroup label="Parallel">
+            <option value="parallelFifths">Parallel Fifths</option>
+            <option value="doubleOctave">Double Octave</option>
+          </optgroup>
+          <optgroup label="Experimental">
+            <option value="harmonicSeries">Harmonic Series</option>
+            <option value="quartal">Quartal</option>
+            <option value="cluster">Cluster</option>
+          </optgroup>
         </select>
       </label>
       {mode === 'detune' && (
