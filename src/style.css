@@ -134,36 +134,89 @@ button:hover:not(:disabled) {
   pointer-events: none;
 }
 
-.effect-control {
-  margin-bottom: 15px;
+/* Effects Card Grid */
+.effects-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 900px;
 }
 
-.effect-toggle {
-  color: #e0e0e0;
+.effect-card {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.effect-card.enabled {
+  border-color: #4a9eff;
+  box-shadow: 0 0 12px rgba(74, 158, 255, 0.15);
+}
+
+.effect-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.effect-card.enabled .effect-card-header {
+  border-bottom-color: #4a9eff40;
+}
+
+.effect-card-header input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
   cursor: pointer;
-  font-size: 14px;
 }
 
-.effect-toggle input {
-  margin-right: 8px;
-}
-
-.effect-params {
-  margin-top: 12px;
-  padding-left: 24px;
-}
-
-.effect-params label {
-  display: block;
-  margin-bottom: 10px;
-  color: #888;
+.effect-card-header span {
   font-size: 13px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.effect-params input[type="range"] {
-  display: block;
-  width: 200px;
-  margin-top: 4px;
+.effect-card.enabled .effect-card-header span {
+  color: #e0e0e0;
+}
+
+.effect-card-params {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.effect-card.enabled .effect-card-params {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.effect-card-params label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #888;
+}
+
+.effect-card-params input[type="range"] {
+  width: 100%;
+  margin: 0;
+}
+
+.effect-card-params select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  margin: 0;
 }
 
 .bpm-display {

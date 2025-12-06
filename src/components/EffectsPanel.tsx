@@ -145,17 +145,18 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
     <section>
       <h2>Effects</h2>
 
-      <div className="effect-control">
-        <label className="effect-toggle">
-          <input
-            type="checkbox"
-            checked={skipEnabled}
-            onChange={handleSkipToggle}
-          />
-          Note Skip
-        </label>
-        {skipEnabled && (
-          <div className="effect-params">
+      <div className="effects-grid">
+        {/* Note Skip */}
+        <div className={`effect-card ${skipEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={skipEnabled}
+              onChange={handleSkipToggle}
+            />
+            <span>Note Skip</span>
+          </div>
+          <div className="effect-card-params">
             <label>
               Play: {skipPlay}
               <input
@@ -190,20 +191,19 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="effect-control">
-        <label className="effect-toggle">
-          <input
-            type="checkbox"
-            checked={decayEnabled}
-            onChange={handleDecayToggle}
-          />
-          Pointillist Decay
-        </label>
-        {decayEnabled && (
-          <div className="effect-params">
+        {/* Pointillist Decay */}
+        <div className={`effect-card ${decayEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={decayEnabled}
+              onChange={handleDecayToggle}
+            />
+            <span>Decay</span>
+          </div>
+          <div className="effect-card-params">
             <label>
               Decay: {Math.round(decayFactor * 100)}%
               <input
@@ -218,22 +218,21 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="effect-control">
-        <label className="effect-toggle">
-          <input
-            type="checkbox"
-            checked={stackEnabled}
-            onChange={handleStackToggle}
-          />
-          Harmonic Stack
-        </label>
-        {stackEnabled && (
-          <div className="effect-params">
+        {/* Harmonic Stack */}
+        <div className={`effect-card ${stackEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={stackEnabled}
+              onChange={handleStackToggle}
+            />
+            <span>Harmonic Stack</span>
+          </div>
+          <div className="effect-card-params">
             <label>
-              Mode:
+              Mode
               <select value={stackMode} onChange={handleStackModeChange}>
                 <option value="detune">Detune (Supersaw)</option>
                 <option value="octave">Octave</option>
@@ -266,20 +265,19 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
           </div>
-        )}
-      </div>
+        </div>
 
-      <div className="effect-control">
-        <label className="effect-toggle">
-          <input
-            type="checkbox"
-            checked={breathEnabled}
-            onChange={handleBreathToggle}
-          />
-          Breath Pattern
-        </label>
-        {breathEnabled && (
-          <div className="effect-params">
+        {/* Breath Pattern */}
+        <div className={`effect-card ${breathEnabled ? 'enabled' : ''}`}>
+          <div className="effect-card-header">
+            <input
+              type="checkbox"
+              checked={breathEnabled}
+              onChange={handleBreathToggle}
+            />
+            <span>Breath Pattern</span>
+          </div>
+          <div className="effect-card-params">
             <label>
               Cycle: {breathDuration.toFixed(1)}s
               <input
@@ -303,7 +301,7 @@ export function EffectsPanel({ onBreathPatternChange, onNoteSkipChange, onPointi
               />
             </label>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
