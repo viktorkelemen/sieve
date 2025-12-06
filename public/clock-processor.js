@@ -51,24 +51,106 @@ class ClockProcessor extends AudioWorkletProcessor {
         break;
       case 'notes':
         if (msg.notes) {
-          // Turn off active notes that are no longer in the new notes array
-          // Match by both MIDI number AND start time to handle same note at different positions
+          // Use new loop length for calculations if provided, otherwise current
+          const newLoopLength = (typeof msg.loopLength === 'number' && msg.loopLength > 0)
+            ? msg.loopLength
+            : (this.loopLength || 0);
+
+          // Minimum duration to ensure gates are registered (approx 5ms at 120bpm)
+          const MIN_DURATION = 0.01;
+
+          // Build a map of new notes for lookup
+          // We use a spatial index approach for fuzzy matching since float times might drift slightly
+          const newNotesByMidi = new Map();
+          for (const n of msg.notes) {
+            // Enforce minimum duration
+            if (n.duration < MIN_DURATION) n.duration = MIN_DURATION;
+
+            if (!newNotesByMidi.has(n.midi)) {
+              newNotesByMidi.set(n.midi, []);
+            }
+            newNotesByMidi.get(n.midi).push(n);
+          }
+
+          // Process active notes
           if (this.activeNotes.length > 0) {
-            const newNoteKeys = new Set(msg.notes.map(n => `${n.midi}:${n.time}`));
-            const orphanedNotes = this.activeNotes
-              .filter(a => !newNoteKeys.has(`${a.midi}:${a.startTime}`))
-              .map(a => a.midi);
+            const orphanedNotes = [];
+            const updatedActiveNotes = [];
+
+            for (const active of this.activeNotes) {
+              // Find corresponding new note
+              // Look for a note with same MIDI and start time within epsilon
+              const candidates = newNotesByMidi.get(active.midi);
+              let newNote = null;
+
+              if (candidates) {
+                // Fuzzy match start time (epsilon 0.001 beats)
+                newNote = candidates.find(n => Math.abs(n.time - active.startTime) < 0.001);
+              }
+
+              if (!newNote) {
+                // Note no longer exists - turn it off
+                orphanedNotes.push(active.midi);
+              } else {
+                // Note still exists - update endTime based on new duration
+                const rawEndTime = newNote.time + newNote.duration;
+                const crossesBoundary = newLoopLength > 0 && rawEndTime > newLoopLength;
+                const endTime = crossesBoundary
+                  ? rawEndTime - newLoopLength
+                  : rawEndTime;
+
+                // Check if the note should have already ended with new duration
+                // Use current cumulative position
+                const pos = newLoopLength > 0
+                  ? this.cumulativePosition % newLoopLength
+                  : this.cumulativePosition;
+
+                let shouldEnd = false;
+
+                // Logic to determine if we passed the end time
+                if (!crossesBoundary) {
+                  // Simple case: start < end
+                  // If we are past endTime, it should end.
+                  if (endTime <= pos) shouldEnd = true;
+
+                  // Special case: if we wrapped, and the note is not cross-boundary,
+                  // it definitely ended in the previous loop.
+                  if (active.hasWrapped && pos < active.startTime) shouldEnd = true;
+                } else {
+                  // Cross boundary case: start > end (wrapped)
+                  // It ends if we have wrapped AND we are past endTime
+                  if (active.hasWrapped && endTime <= pos) shouldEnd = true;
+
+                  // If it WAS cross-boundary but now isn't (shortened), and we wrapped,
+                  // it should have ended.
+                  if (!crossesBoundary && active.crossesBoundary && active.hasWrapped) shouldEnd = true;
+                }
+
+                if (shouldEnd) {
+                  orphanedNotes.push(active.midi);
+                } else {
+                  // Update the active note with new timing
+                  updatedActiveNotes.push({
+                    ...active,
+                    endTime,
+                    crossesBoundary,
+                    // Preserve hasWrapped state
+                  });
+                }
+              }
+            }
+
             if (orphanedNotes.length > 0) {
               this.port.postMessage({ type: 'noteOff', notes: orphanedNotes });
-              this.activeNotes = this.activeNotes.filter(a => newNoteKeys.has(`${a.midi}:${a.startTime}`));
             }
+            this.activeNotes = updatedActiveNotes;
           }
+
           this.notes = msg.notes;
-          // Validate loopLength (must be positive number or 0)
-          this.loopLength = (typeof msg.loopLength === 'number' && msg.loopLength > 0)
-            ? msg.loopLength
-            : 0;
+          this.loopLength = newLoopLength;
+
           // Reset position when notes change to catch notes at position 0
+          // ONLY if not running (initial setup)
           if (!this.isRunning) {
             this.lastPosition = 0;
             this.cumulativePosition = 0;

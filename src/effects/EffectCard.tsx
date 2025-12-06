@@ -89,6 +89,7 @@ export function EffectCard({ title, enabled, onToggle, children, disabled }: Eff
         <input
           type="checkbox"
           checked={enabled}
+          disabled={disabled}
           onChange={(e) => onToggle(e.target.checked)}
           {...stylex.props(styles.checkbox)}
         />

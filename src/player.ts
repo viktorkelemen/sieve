@@ -141,11 +141,14 @@ export function updateNotes(notes: Note[]): void {
     scheduledEvents.forEach(id => window.clearTimeout(id));
     scheduledEvents = [];
 
-    // Schedule only notes that haven't played yet in this loop iteration
+    // Schedule notes based on their state relative to current position
     notes.forEach(note => {
+      const noteEndTime = note.time + note.duration;
+
       if (note.time > currentPosition) {
+        // Note hasn't started yet - schedule both on and off
         const noteOnTime = (note.time - currentPosition) * 1000;
-        const noteOffTime = (note.time + note.duration - currentPosition) * 1000;
+        const noteOffTime = (noteEndTime - currentPosition) * 1000;
         const velocity = Math.round(note.velocity * 127);
 
         const onId = window.setTimeout(() => {
@@ -154,6 +157,16 @@ export function updateNotes(notes: Note[]): void {
           }
         }, noteOnTime);
         scheduledEvents.push(onId);
+
+        const offId = window.setTimeout(() => {
+          if (isPlaying) {
+            sendNoteOff(note.midi);
+          }
+        }, noteOffTime);
+        scheduledEvents.push(offId);
+      } else if (noteEndTime > currentPosition) {
+        // Note is currently playing - schedule only the note-off
+        const noteOffTime = (noteEndTime - currentPosition) * 1000;
 
         const offId = window.setTimeout(() => {
           if (isPlaying) {
