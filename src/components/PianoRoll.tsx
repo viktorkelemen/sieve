@@ -22,6 +22,10 @@ const CHANNEL_COLORS: Array<[string, string]> = [
   ['#ff4a4a', '#8a2d2d'], // Ch 7: Red
 ];
 
+const CHANNEL_NAMES = [
+  'Ch 1', 'Ch 2', 'Ch 3', 'Ch 4', 'Ch 5', 'Ch 6', 'Ch 7', 'Ch 8',
+];
+
 function getChannelColor(channel: number, isActive: boolean): string {
   const colorPair = CHANNEL_COLORS[channel % CHANNEL_COLORS.length];
   return isActive ? colorPair[0] : colorPair[1];
@@ -35,6 +39,9 @@ export function PianoRoll({ notes, isPlaying }: PianoRollProps) {
   const minMidi = notes.length > 0 ? Math.min(...notes.map(n => n.midi)) : 60;
   const maxMidi = notes.length > 0 ? Math.max(...notes.map(n => n.midi)) : 72;
   const noteRange = maxMidi - minMidi + 1;
+
+  // Find which channels are in use
+  const activeChannels = [...new Set(notes.map(n => n.channel ?? 0))].sort((a, b) => a - b);
 
   // Calculate dimensions
   const loopLength = notes.length > 0
@@ -111,6 +118,19 @@ export function PianoRoll({ notes, isPlaying }: PianoRollProps) {
           height={height}
         />
       </div>
+      {activeChannels.length > 1 && (
+        <div className="channel-legend">
+          {activeChannels.map(ch => (
+            <span key={ch} className="channel-legend-item">
+              <span
+                className="channel-legend-swatch"
+                style={{ backgroundColor: CHANNEL_COLORS[ch % CHANNEL_COLORS.length][0] }}
+              />
+              {CHANNEL_NAMES[ch % CHANNEL_NAMES.length]}
+            </span>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
