@@ -25,7 +25,8 @@ export function NotesList({ notes }: NotesListProps) {
             {midiToNoteName(note.midi).padEnd(7)} |{' '}
             t: {note.time.toFixed(3)}s |{' '}
             dur: {note.duration.toFixed(3)}s |{' '}
-            vel: {Math.round(note.velocity * 127)}
+            vel: {Math.round(note.velocity * 127).toString().padStart(3)} |{' '}
+            ch: {((note.channel ?? 0) + 1).toString().padStart(2)}
           </div>
         ))}
       </div>
