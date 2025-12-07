@@ -9,6 +9,24 @@ interface PianoRollProps {
 const NOTE_HEIGHT = 8;
 const PIXELS_PER_SECOND = 100;
 
+// Channel color palette: [active, inactive] pairs
+// Designed for harmonic stack visualization (root + layers)
+const CHANNEL_COLORS: Array<[string, string]> = [
+  ['#4a9eff', '#2d5a8a'], // Ch 0: Blue (root)
+  ['#ff9f4a', '#8a5a2d'], // Ch 1: Orange
+  ['#4aff9f', '#2d8a5a'], // Ch 2: Green
+  ['#9f4aff', '#5a2d8a'], // Ch 3: Purple
+  ['#4afeff', '#2d8a8a'], // Ch 4: Cyan
+  ['#ff4a9f', '#8a2d5a'], // Ch 5: Pink
+  ['#feff4a', '#8a8a2d'], // Ch 6: Yellow
+  ['#ff4a4a', '#8a2d2d'], // Ch 7: Red
+];
+
+function getChannelColor(channel: number, isActive: boolean): string {
+  const colorPair = CHANNEL_COLORS[channel % CHANNEL_COLORS.length];
+  return isActive ? colorPair[0] : colorPair[1];
+}
+
 export function PianoRoll({ notes, isPlaying }: PianoRollProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [position, setPosition] = useState(0);
@@ -62,7 +80,8 @@ export function PianoRoll({ notes, isPlaying }: PianoRollProps) {
         position >= note.time &&
         position < note.time + note.duration;
 
-      ctx.fillStyle = isActive ? '#4a9eff' : '#6b8aad';
+      const channel = note.channel ?? 0;
+      ctx.fillStyle = getChannelColor(channel, isActive);
       ctx.fillRect(x, y, Math.max(w, 1), NOTE_HEIGHT - 1);
     });
 
