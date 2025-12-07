@@ -121,7 +121,7 @@ export function applyHarmonicStack(
           ...note,
           midi: note.midi + semitonesOffset,
           velocity: note.velocity * velocityScale,
-          channel: spreadChannels ? (baseChannel + i + 1) % 16 : baseChannel,
+          channel: spreadChannels ? (baseChannel + i + 1) % 16 : note.channel,
         });
       }
     } else {
@@ -132,7 +132,7 @@ export function applyHarmonicStack(
           ...note,
           midi: note.midi + intervals[i],
           velocity: note.velocity * velocityScale,
-          channel: spreadChannels ? (baseChannel + i + 1) % 16 : baseChannel,
+          channel: spreadChannels ? (baseChannel + i + 1) % 16 : note.channel,
         });
       }
     }

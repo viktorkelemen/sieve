@@ -154,7 +154,15 @@ describe('applyHarmonicStack', () => {
       const result = applyHarmonicStack(notes, { mode: 'octave', spreadChannels: false });
 
       expect(result[0].channel).toBe(3); // Original
-      expect(result[1].channel).toBe(3); // Stacked note keeps base channel
+      expect(result[1].channel).toBe(3); // Stacked note keeps original channel
+    });
+
+    it('preserves undefined channel when disabled', () => {
+      const notes: Note[] = [{ midi: 60, time: 0, duration: 0.5, velocity: 0.8 }];
+      const result = applyHarmonicStack(notes, { mode: 'octave', spreadChannels: false });
+
+      expect(result[0].channel).toBeUndefined(); // Original has no channel
+      expect(result[1].channel).toBeUndefined(); // Stacked note preserves undefined
     });
 
     it('respects base channel and increments from there', () => {
