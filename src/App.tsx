@@ -63,7 +63,7 @@ export function App() {
   });
   const [harmonicStackSettings, setHarmonicStackSettings] = useState<HarmonicStackSettings>({
     enabled: false,
-    options: { mode: 'octave', detuneSpread: 12, velocityScale: 0.8 },
+    options: { mode: 'octave', detuneSpread: 12, velocityScale: 0.8, spreadChannels: false },
   });
   const [stutterSettings, setStutterSettings] = useState<StutterSettings>({
     enabled: false,

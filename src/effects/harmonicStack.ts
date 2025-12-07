@@ -30,12 +30,14 @@ export interface HarmonicStackOptions {
   mode: HarmonicStackMode;
   detuneSpread: number;      // Cents spread for detune mode (0-50)
   velocityScale: number;     // Velocity multiplier for stacked notes (0-1)
+  spreadChannels: boolean;   // Route each layer to a different MIDI channel
 }
 
 const defaultOptions: HarmonicStackOptions = {
   mode: 'octave',
   detuneSpread: 12,
   velocityScale: 0.8,
+  spreadChannels: false,
 };
 
 // Interval definitions in semitones for each mode
@@ -97,36 +99,40 @@ export function applyHarmonicStack(
   options: Partial<HarmonicStackOptions> = {}
 ): Note[] {
   const opts = { ...defaultOptions, ...options };
-  const { mode, detuneSpread, velocityScale } = opts;
+  const { mode, detuneSpread, velocityScale, spreadChannels } = opts;
 
   if (notes.length === 0) return notes;
 
   const result: Note[] = [];
 
   for (const note of notes) {
+    const baseChannel = note.channel || 0;
+
     // Always include the original note
     result.push(note);
 
     if (mode === 'detune') {
       // Add detuned copies using cents (converted to fractional semitones)
-      for (const centMultiplier of detuneCents) {
-        const centsOffset = centMultiplier * detuneSpread;
+      for (let i = 0; i < detuneCents.length; i++) {
+        const centsOffset = detuneCents[i] * detuneSpread;
         const semitonesOffset = centsOffset / 100;
 
         result.push({
           ...note,
           midi: note.midi + semitonesOffset,
           velocity: note.velocity * velocityScale,
+          channel: spreadChannels ? (baseChannel + i + 1) % 16 : baseChannel,
         });
       }
     } else {
       // Add interval-based copies
       const intervals = modeIntervals[mode];
-      for (const semitones of intervals) {
+      for (let i = 0; i < intervals.length; i++) {
         result.push({
           ...note,
-          midi: note.midi + semitones,
+          midi: note.midi + intervals[i],
           velocity: note.velocity * velocityScale,
+          channel: spreadChannels ? (baseChannel + i + 1) % 16 : baseChannel,
         });
       }
     }
