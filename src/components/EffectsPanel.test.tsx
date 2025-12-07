@@ -11,6 +11,7 @@ describe('EffectsPanel', () => {
         onStutterChange: vi.fn(),
         onVelocityHumanizeChange: vi.fn(),
         onLegatoChange: vi.fn(),
+        onVoiceAllocationChange: vi.fn(),
     };
 
     it('renders all effect widgets', () => {
@@ -18,6 +19,7 @@ describe('EffectsPanel', () => {
 
         expect(screen.getByText('Effects')).toBeDefined();
         expect(screen.getByText('Note Skip')).toBeDefined();
+        expect(screen.getByText('Voice Allocation')).toBeDefined();
         expect(screen.getByText('Stutter')).toBeDefined();
         expect(screen.getByText('Humanize')).toBeDefined();
         expect(screen.getByText('Decay')).toBeDefined();

@@ -6,7 +6,7 @@ import { ScoreView } from './components/ScoreView';
 import { Transport } from './components/Transport';
 import { EffectsPanel } from './components/EffectsPanel';
 import { Note } from './player';
-import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, applyHarmonicStack, applyStutter, applyVelocityHumanize, applyLegato, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, StutterOptions, VelocityHumanizeOptions, LegatoOptions } from './effects';
+import { applyBreathPattern, applyNoteSkip, applyPointillistDecay, applyHarmonicStack, applyStutter, applyVelocityHumanize, applyLegato, applyVoiceAllocation, BreathPatternOptions, NoteSkipOptions, PointillistDecayOptions, HarmonicStackOptions, StutterOptions, VelocityHumanizeOptions, LegatoOptions, VoiceAllocationOptions } from './effects';
 
 type ViewMode = 'pianoroll' | 'score';
 
@@ -45,6 +45,11 @@ interface LegatoSettings {
   options: LegatoOptions;
 }
 
+interface VoiceAllocationSettings {
+  enabled: boolean;
+  options: VoiceAllocationOptions;
+}
+
 export function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -77,6 +82,10 @@ export function App() {
     enabled: false,
     options: { overlap: 20, maxGap: 0.5 },
   });
+  const [voiceAllocationSettings, setVoiceAllocationSettings] = useState<VoiceAllocationSettings>({
+    enabled: false,
+    options: { maxVoices: 4 },
+  });
 
   const processedNotes = useMemo(() => {
     let result = notes;
@@ -84,6 +93,11 @@ export function App() {
     // Apply Note Skip first (reduces note count)
     if (noteSkipSettings.enabled) {
       result = applyNoteSkip(result, noteSkipSettings.options);
+    }
+
+    // Apply Voice Allocation (spreads overlapping notes across channels)
+    if (voiceAllocationSettings.enabled) {
+      result = applyVoiceAllocation(result, voiceAllocationSettings.options);
     }
 
     // Apply Harmonic Stack (adds layered notes)
@@ -117,7 +131,7 @@ export function App() {
     }
 
     return result;
-  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings, harmonicStackSettings, stutterSettings, velocityHumanizeSettings, legatoSettings]);
+  }, [notes, breathSettings, noteSkipSettings, pointillistDecaySettings, harmonicStackSettings, stutterSettings, velocityHumanizeSettings, legatoSettings, voiceAllocationSettings]);
 
   const handleBreathPatternChange = (enabled: boolean, options: BreathPatternOptions) => {
     setBreathSettings({ enabled, options });
@@ -147,6 +161,10 @@ export function App() {
     setLegatoSettings({ enabled, options });
   };
 
+  const handleVoiceAllocationChange = (enabled: boolean, options: VoiceAllocationOptions) => {
+    setVoiceAllocationSettings({ enabled, options });
+  };
+
   return (
     <div id="app">
       <MidiFileLoader onLoad={setNotes} />
@@ -159,6 +177,7 @@ export function App() {
         onStutterChange={handleStutterChange}
         onVelocityHumanizeChange={handleVelocityHumanizeChange}
         onLegatoChange={handleLegatoChange}
+        onVoiceAllocationChange={handleVoiceAllocationChange}
         legatoDisabled={stutterSettings.enabled || pointillistDecaySettings.enabled}
         stutterDisabled={legatoSettings.enabled}
         decayDisabled={legatoSettings.enabled}

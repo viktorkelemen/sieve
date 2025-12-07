@@ -29,6 +29,10 @@ export type { VelocityHumanizeOptions } from './velocityHumanize';
 export { applyLegato } from './legato';
 export type { LegatoOptions } from './legato';
 
+// Re-export voice allocation
+export { applyVoiceAllocation } from './voiceAllocation';
+export type { VoiceAllocationOptions } from './voiceAllocation';
+
 // Re-export widgets
 export { EffectCard } from './EffectCard';
 export { NoteSkipWidget } from './NoteSkipWidget';
@@ -38,6 +42,7 @@ export { DecayWidget } from './DecayWidget';
 export { HarmonicStackWidget } from './HarmonicStackWidget';
 export { BreathPatternWidget } from './BreathPatternWidget';
 export { LegatoWidget } from './LegatoWidget';
+export { VoiceAllocationWidget } from './VoiceAllocationWidget';
 
 // Effects registry
 import { Effect } from './types';
@@ -48,6 +53,7 @@ import { applyHarmonicStack, HarmonicStackOptions } from './harmonicStack';
 import { applyStutter, StutterOptions } from './stutter';
 import { applyVelocityHumanize, VelocityHumanizeOptions } from './velocityHumanize';
 import { applyLegato, LegatoOptions } from './legato';
+import { applyVoiceAllocation, VoiceAllocationOptions } from './voiceAllocation';
 
 export const effects: Effect[] = [
   {
@@ -77,5 +83,9 @@ export const effects: Effect[] = [
   {
     name: 'Legato',
     apply: (notes, options) => applyLegato(notes, options as Partial<LegatoOptions>),
+  },
+  {
+    name: 'Voice Allocation',
+    apply: (notes, options) => applyVoiceAllocation(notes, options as Partial<VoiceAllocationOptions>),
   },
 ];

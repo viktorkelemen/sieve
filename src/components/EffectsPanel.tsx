@@ -7,6 +7,7 @@ import {
   StutterOptions,
   VelocityHumanizeOptions,
   LegatoOptions,
+  VoiceAllocationOptions,
   NoteSkipWidget,
   StutterWidget,
   VelocityHumanizeWidget,
@@ -14,12 +15,13 @@ import {
   HarmonicStackWidget,
   BreathPatternWidget,
   LegatoWidget,
+  VoiceAllocationWidget,
 } from '../effects';
 
 const styles = stylex.create({
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(6, 1fr)',
+    gridTemplateColumns: 'repeat(4, 1fr)',
     gap: 12,
   },
 });
@@ -32,6 +34,7 @@ interface EffectsPanelProps {
   onStutterChange: (enabled: boolean, options: StutterOptions) => void;
   onVelocityHumanizeChange: (enabled: boolean, options: VelocityHumanizeOptions) => void;
   onLegatoChange: (enabled: boolean, options: LegatoOptions) => void;
+  onVoiceAllocationChange: (enabled: boolean, options: VoiceAllocationOptions) => void;
   legatoDisabled?: boolean;
   stutterDisabled?: boolean;
   decayDisabled?: boolean;
@@ -45,6 +48,7 @@ export function EffectsPanel({
   onStutterChange,
   onVelocityHumanizeChange,
   onLegatoChange,
+  onVoiceAllocationChange,
   legatoDisabled,
   stutterDisabled,
   decayDisabled,
@@ -54,12 +58,13 @@ export function EffectsPanel({
       <h2>Effects</h2>
       <div {...stylex.props(styles.grid)}>
         <NoteSkipWidget onChange={onNoteSkipChange} />
+        <VoiceAllocationWidget onChange={onVoiceAllocationChange} />
+        <HarmonicStackWidget onChange={onHarmonicStackChange} />
+        <LegatoWidget onChange={onLegatoChange} disabled={legatoDisabled} />
         <StutterWidget onChange={onStutterChange} disabled={stutterDisabled} />
         <VelocityHumanizeWidget onChange={onVelocityHumanizeChange} />
         <DecayWidget onChange={onPointillistDecayChange} disabled={decayDisabled} />
-        <HarmonicStackWidget onChange={onHarmonicStackChange} />
         <BreathPatternWidget onChange={onBreathPatternChange} />
-        <LegatoWidget onChange={onLegatoChange} disabled={legatoDisabled} />
       </div>
     </section>
   );
