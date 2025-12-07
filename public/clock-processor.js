@@ -61,15 +61,17 @@ class ClockProcessor extends AudioWorkletProcessor {
 
           // Build a map of new notes for lookup
           // We use a spatial index approach for fuzzy matching since float times might drift slightly
-          const newNotesByMidi = new Map();
+          // Key is now midi + channel
+          const newNotesByKey = new Map();
           for (const n of msg.notes) {
             // Enforce minimum duration
             if (n.duration < MIN_DURATION) n.duration = MIN_DURATION;
 
-            if (!newNotesByMidi.has(n.midi)) {
-              newNotesByMidi.set(n.midi, []);
+            const key = `${n.midi}-${n.channel || 0}`;
+            if (!newNotesByKey.has(key)) {
+              newNotesByKey.set(key, []);
             }
-            newNotesByMidi.get(n.midi).push(n);
+            newNotesByKey.get(key).push(n);
           }
 
           // Process active notes
@@ -80,7 +82,8 @@ class ClockProcessor extends AudioWorkletProcessor {
             for (const active of this.activeNotes) {
               // Find corresponding new note
               // Look for a note with same MIDI and start time within epsilon
-              const candidates = newNotesByMidi.get(active.midi);
+              const key = `${active.midi}-${active.channel || 0}`;
+              const candidates = newNotesByKey.get(key);
               let newNote = null;
 
               if (candidates) {
@@ -90,7 +93,7 @@ class ClockProcessor extends AudioWorkletProcessor {
 
               if (!newNote) {
                 // Note no longer exists - turn it off
-                orphanedNotes.push(active.midi);
+                orphanedNotes.push({ midi: active.midi, channel: active.channel });
               } else {
                 // Note still exists - update endTime based on new duration
                 const rawEndTime = newNote.time + newNote.duration;
@@ -127,7 +130,7 @@ class ClockProcessor extends AudioWorkletProcessor {
                 }
 
                 if (shouldEnd) {
-                  orphanedNotes.push(active.midi);
+                  orphanedNotes.push({ midi: active.midi, channel: active.channel });
                 } else {
                   // Update the active note with new timing
                   updatedActiveNotes.push({
@@ -197,7 +200,7 @@ class ClockProcessor extends AudioWorkletProcessor {
 
       case CMD_STOP:
         this.isRunning = false;
-        const noteOffs = this.activeNotes.map(n => n.midi);
+        const noteOffs = this.activeNotes.map(n => ({ midi: n.midi, channel: n.channel }));
         if (noteOffs.length > 0) {
           this.port.postMessage({ type: 'noteOff', notes: noteOffs });
         }
@@ -296,7 +299,7 @@ class ClockProcessor extends AudioWorkletProcessor {
       // Turn off notes that don't cross the boundary
       const noteOffs = this.activeNotes
         .filter(n => !n.crossesBoundary)
-        .map(n => n.midi);
+        .map(n => ({ midi: n.midi, channel: n.channel }));
       if (noteOffs.length > 0) {
         this.port.postMessage({ type: 'noteOff', notes: noteOffs });
       }
@@ -329,14 +332,15 @@ class ClockProcessor extends AudioWorkletProcessor {
       }
 
       if (shouldTrigger) {
-        // Check if already active (same MIDI note number)
-        const existingIdx = this.activeNotes.findIndex(a => a.midi === note.midi);
+        const channel = note.channel || 0;
+        // Check if already active (same MIDI note number AND channel)
+        const existingIdx = this.activeNotes.findIndex(a => a.midi === note.midi && a.channel === channel);
         if (existingIdx !== -1) {
-          this.port.postMessage({ type: 'noteOff', notes: [note.midi] });
+          this.port.postMessage({ type: 'noteOff', notes: [{ midi: note.midi, channel }] });
           this.activeNotes.splice(existingIdx, 1);
         }
 
-        noteOns.push({ midi: note.midi, velocity: Math.round(note.velocity * 127) });
+        noteOns.push({ midi: note.midi, velocity: Math.round(note.velocity * 127), channel });
 
         // Calculate end time and check if it crosses the loop boundary
         const rawEndTime = note.time + note.duration;
@@ -350,7 +354,8 @@ class ClockProcessor extends AudioWorkletProcessor {
           startTime: note.time,
           endTime,
           crossesBoundary,
-          hasWrapped: false
+          hasWrapped: false,
+          channel
         });
       }
     }
@@ -381,7 +386,7 @@ class ClockProcessor extends AudioWorkletProcessor {
       }
 
       if (shouldEnd) {
-        noteOffs.push(active.midi);
+        noteOffs.push({ midi: active.midi, channel: active.channel });
         return false;
       }
       return true;

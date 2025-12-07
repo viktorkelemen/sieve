@@ -46,6 +46,7 @@ export function applyStutter(
         time: note.time + i * step,
         duration: repDuration,
         velocity: Math.max(velocity, 0.01), // Floor to prevent silent notes
+        channel: note.channel,
       });
       velocity *= velocityDecay;
     }

@@ -100,13 +100,13 @@ function handleWorkletMessage(event: MessageEvent) {
       // Skip if disabled (prevents stuck notes from race with disable)
       if (!isEnabled) break;
       for (const note of msg.notes) {
-        sendNoteOn(note.midi, note.velocity);
+        sendNoteOn(note.midi, note.velocity, note.channel || 0);
       }
       break;
 
     case 'noteOff':
-      for (const midi of msg.notes) {
-        sendNoteOff(midi);
+      for (const note of msg.notes) {
+        sendNoteOff(note.midi, note.channel || 0);
       }
       break;
 
@@ -199,6 +199,7 @@ export function setAudioClockNotes(notes: Note[], loopLength: number): void {
       time: n.time * BEATS_PER_SECOND,
       duration: n.duration * BEATS_PER_SECOND,
       velocity: n.velocity,
+      channel: n.channel || 0,
     })),
     loopLength: loopLength * BEATS_PER_SECOND,
   });

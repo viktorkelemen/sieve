@@ -7,6 +7,7 @@ export interface Note {
   time: number;      // Start time in seconds
   duration: number;  // Duration in seconds
   velocity: number;  // 0-1 range
+  channel?: number;  // 0-15 (default 0)
 }
 
 /**

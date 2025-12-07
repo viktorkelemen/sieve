@@ -6,6 +6,7 @@ export interface Note {
   time: number;      // in seconds
   duration: number;  // in seconds
   velocity: number;  // 0-1
+  channel?: number;  // 0-15 (default 0)
 }
 
 let isPlaying = false;
@@ -79,11 +80,12 @@ function scheduleNotes(notes: Note[]): void {
     const noteOnTime = note.time * 1000; // convert to ms
     const noteOffTime = (note.time + duration) * 1000;
     const velocity = Math.round(note.velocity * 127);
+    const channel = note.channel || 0;
 
     // Schedule note on
     const onId = window.setTimeout(() => {
       if (isPlaying) {
-        sendNoteOn(note.midi, velocity);
+        sendNoteOn(note.midi, velocity, channel);
       }
     }, noteOnTime);
     scheduledEvents.push(onId);
@@ -91,7 +93,7 @@ function scheduleNotes(notes: Note[]): void {
     // Schedule note off
     const offId = window.setTimeout(() => {
       if (isPlaying) {
-        sendNoteOff(note.midi);
+        sendNoteOff(note.midi, channel);
       }
     }, noteOffTime);
     scheduledEvents.push(offId);
@@ -154,6 +156,7 @@ export function updateNotes(notes: Note[]): void {
       // Enforce minimum duration
       const duration = Math.max(note.duration, MIN_DURATION);
       const noteEndTime = note.time + duration;
+      const channel = note.channel || 0;
 
       if (note.time > currentPosition) {
         // Note hasn't started yet - schedule both on and off
@@ -163,14 +166,13 @@ export function updateNotes(notes: Note[]): void {
 
         const onId = window.setTimeout(() => {
           if (isPlaying) {
-            sendNoteOn(note.midi, velocity);
+            sendNoteOn(note.midi, velocity, channel);
           }
         }, noteOnTime);
         scheduledEvents.push(onId);
-
         const offId = window.setTimeout(() => {
           if (isPlaying) {
-            sendNoteOff(note.midi);
+            sendNoteOff(note.midi, channel);
           }
         }, noteOffTime);
         scheduledEvents.push(offId);
@@ -180,7 +182,7 @@ export function updateNotes(notes: Note[]): void {
 
         const offId = window.setTimeout(() => {
           if (isPlaying) {
-            sendNoteOff(note.midi);
+            sendNoteOff(note.midi, channel);
           }
         }, noteOffTime);
         scheduledEvents.push(offId);

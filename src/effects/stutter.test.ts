@@ -53,6 +53,14 @@ describe('applyStutter', () => {
 
       result.forEach(note => expect(note.midi).toBe(72));
     });
+
+    it('preserves channel property', () => {
+      const notes = [makeNote(0, 1.0)];
+      notes[0].channel = 5;
+      const result = applyStutter(notes, { repetitions: 3 });
+
+      result.forEach(note => expect(note.channel).toBe(5));
+    });
   });
 
   describe('velocity decay', () => {

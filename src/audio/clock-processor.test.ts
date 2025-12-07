@@ -9,6 +9,7 @@ interface ActiveNote {
   endTime: number;
   crossesBoundary: boolean;
   hasWrapped: boolean;
+  channel?: number;
 }
 
 interface Note {
@@ -16,6 +17,7 @@ interface Note {
   time: number;
   duration: number;
   velocity: number;
+  channel?: number;
 }
 
 // Extract the note update logic for testing
@@ -24,21 +26,30 @@ function processNotesUpdate(
   newNotes: Note[],
   loopLength: number,
   cumulativePosition: number
-): { orphanedNotes: number[]; updatedActiveNotes: ActiveNote[] } {
-  const newNoteMap = new Map<string, Note>();
+): { orphanedNotes: { midi: number; channel?: number }[]; updatedActiveNotes: ActiveNote[] } {
+  const newNotesByKey = new Map<string, Note[]>();
   for (const n of newNotes) {
-    newNoteMap.set(`${n.midi}:${n.time}`, n);
+    const key = `${n.midi}-${n.channel || 0}`;
+    if (!newNotesByKey.has(key)) {
+      newNotesByKey.set(key, []);
+    }
+    newNotesByKey.get(key)!.push(n);
   }
 
-  const orphanedNotes: number[] = [];
+  const orphanedNotes: { midi: number; channel?: number }[] = [];
   const updatedActiveNotes: ActiveNote[] = [];
 
   for (const active of activeNotes) {
-    const key = `${active.midi}:${active.startTime}`;
-    const newNote = newNoteMap.get(key);
+    const key = `${active.midi}-${active.channel || 0}`;
+    const candidates = newNotesByKey.get(key);
+    let newNote: Note | undefined;
+
+    if (candidates) {
+      newNote = candidates.find(n => Math.abs(n.time - active.startTime) < 0.001);
+    }
 
     if (!newNote) {
-      orphanedNotes.push(active.midi);
+      orphanedNotes.push({ midi: active.midi, channel: active.channel });
     } else {
       const rawEndTime = newNote.time + newNote.duration;
       const crossesBoundary = loopLength > 0 && rawEndTime > loopLength;
@@ -61,7 +72,7 @@ function processNotesUpdate(
       }
 
       if (shouldEnd) {
-        orphanedNotes.push(active.midi);
+        orphanedNotes.push({ midi: active.midi, channel: active.channel });
       } else {
         updatedActiveNotes.push({
           ...active,
@@ -96,7 +107,7 @@ describe('clock-processor note update logic', () => {
 
       const result = processNotesUpdate(activeNotes, newNotes, 4, 0.5);
 
-      expect(result.orphanedNotes).toContain(60);
+      expect(result.orphanedNotes).toContainEqual(expect.objectContaining({ midi: 60 }));
       expect(result.updatedActiveNotes).toHaveLength(0);
     });
 
@@ -146,7 +157,7 @@ describe('clock-processor note update logic', () => {
       // Position is 0.2 (after wrap)
       const result = processNotesUpdate(activeNotes, newNotes, 4, 4.2); // cumulativePosition 4.2 % 4 = 0.2
 
-      expect(result.orphanedNotes).toContain(60);
+      expect(result.orphanedNotes).toContainEqual(expect.objectContaining({ midi: 60 }));
       expect(result.updatedActiveNotes).toHaveLength(0);
     });
 
@@ -172,7 +183,7 @@ describe('clock-processor note update logic', () => {
 
       // Note becomes non-cross-boundary, endTime is 3.9, pos is 3.9
       // endTime <= pos is true, so it should end
-      expect(result.orphanedNotes).toContain(60);
+      expect(result.orphanedNotes).toContainEqual(expect.objectContaining({ midi: 60 }));
     });
   });
 
@@ -197,7 +208,7 @@ describe('clock-processor note update logic', () => {
       // Position is 0.3 (past new endTime of 0.2)
       const result = processNotesUpdate(activeNotes, newNotes, 4, 4.3);
 
-      expect(result.orphanedNotes).toContain(60);
+      expect(result.orphanedNotes).toContainEqual(expect.objectContaining({ midi: 60 }));
       expect(result.updatedActiveNotes).toHaveLength(0);
     });
 
@@ -241,7 +252,7 @@ describe('clock-processor note update logic', () => {
 
       const result = processNotesUpdate(activeNotes, newNotes, 4, 0.5);
 
-      expect(result.orphanedNotes).toContain(60);
+      expect(result.orphanedNotes).toContainEqual(expect.objectContaining({ midi: 60 }));
       expect(result.updatedActiveNotes).toHaveLength(0);
     });
 
@@ -280,7 +291,7 @@ describe('clock-processor note update logic', () => {
 
       const result = processNotesUpdate(activeNotes, newNotes, 4, 0.8);
 
-      expect(result.orphanedNotes).toEqual([60]);
+      expect(result.orphanedNotes).toEqual([expect.objectContaining({ midi: 60 })]);
       expect(result.updatedActiveNotes).toHaveLength(1);
       expect(result.updatedActiveNotes[0].midi).toBe(64);
     });
@@ -332,5 +343,56 @@ describe('clock-processor note update logic', () => {
       expect(result.updatedActiveNotes[0].crossesBoundary).toBe(false);
       expect(result.updatedActiveNotes[0].endTime).toBe(3.8);
     });
+  });
+});
+describe('Multi-Channel Support', () => {
+  it('treats same MIDI note on different channels as distinct notes', () => {
+    const activeNotes: ActiveNote[] = [
+      {
+        midi: 60,
+        startTime: 0,
+        endTime: 2,
+        crossesBoundary: false,
+        hasWrapped: false,
+        channel: 0,
+      },
+      {
+        midi: 60,
+        startTime: 0,
+        endTime: 2,
+        crossesBoundary: false,
+        hasWrapped: false,
+        channel: 1,
+      },
+    ];
+
+    // Channel 0 note ends, Channel 1 note continues
+    const newNotes: Note[] = [
+      {
+        midi: 60,
+        time: 0,
+        duration: 0.2, // Channel 0 ends (pos 0.5 > 0.2)
+        velocity: 0.8,
+        channel: 0,
+      },
+      {
+        midi: 60,
+        time: 0,
+        duration: 1, // Channel 1 continues (pos 0.5 < 1)
+        velocity: 0.8,
+        channel: 1,
+      },
+    ];
+
+    const result = processNotesUpdate(activeNotes, newNotes, 4, 0.5);
+
+    // Should have one orphan (channel 0) and one active (channel 1)
+
+    expect(result.orphanedNotes).toHaveLength(1);
+    expect(result.orphanedNotes[0]).toEqual({ midi: 60, channel: 0 });
+
+    expect(result.updatedActiveNotes).toHaveLength(1);
+    expect(result.updatedActiveNotes[0].midi).toBe(60);
+    expect(result.updatedActiveNotes[0].channel).toBe(1);
   });
 });
