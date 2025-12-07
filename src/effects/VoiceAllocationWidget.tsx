@@ -17,10 +17,12 @@ export function VoiceAllocationWidget({ onChange }: VoiceAllocationWidgetProps) 
   };
 
   const handleMaxVoicesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    setMaxVoices(value);
+    setMaxVoices(parseInt(e.target.value));
+  };
+
+  const handleCommit = () => {
     if (enabled) {
-      onChange(enabled, { maxVoices: value });
+      onChange(enabled, { maxVoices });
     }
   };
 
@@ -35,6 +37,8 @@ export function VoiceAllocationWidget({ onChange }: VoiceAllocationWidgetProps) 
           step="1"
           value={maxVoices}
           onChange={handleMaxVoicesChange}
+          onMouseUp={handleCommit}
+          onTouchEnd={handleCommit}
           {...stylex.props(sliderStyle)}
         />
       </label>
