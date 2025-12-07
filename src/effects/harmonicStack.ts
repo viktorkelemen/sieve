@@ -30,14 +30,12 @@ export interface HarmonicStackOptions {
   mode: HarmonicStackMode;
   detuneSpread: number;      // Cents spread for detune mode (0-50)
   velocityScale: number;     // Velocity multiplier for stacked notes (0-1)
-  spreadChannels: boolean;   // Route each layer to a different MIDI channel
 }
 
 const defaultOptions: HarmonicStackOptions = {
   mode: 'octave',
   detuneSpread: 12,
   velocityScale: 0.8,
-  spreadChannels: false,
 };
 
 // Interval definitions in semitones for each mode
@@ -99,7 +97,7 @@ export function applyHarmonicStack(
   options: Partial<HarmonicStackOptions> = {}
 ): Note[] {
   const opts = { ...defaultOptions, ...options };
-  const { mode, detuneSpread, velocityScale, spreadChannels } = opts;
+  const { mode, detuneSpread, velocityScale } = opts;
 
   if (notes.length === 0) return notes;
 
@@ -121,7 +119,7 @@ export function applyHarmonicStack(
           ...note,
           midi: note.midi + semitonesOffset,
           velocity: note.velocity * velocityScale,
-          channel: spreadChannels ? (baseChannel + i + 1) % 16 : note.channel,
+          channel: (baseChannel + i + 1) % 16,
         });
       }
     } else {
@@ -132,7 +130,7 @@ export function applyHarmonicStack(
           ...note,
           midi: note.midi + intervals[i],
           velocity: note.velocity * velocityScale,
-          channel: spreadChannels ? (baseChannel + i + 1) % 16 : note.channel,
+          channel: (baseChannel + i + 1) % 16,
         });
       }
     }

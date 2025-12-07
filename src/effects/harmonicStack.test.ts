@@ -138,10 +138,10 @@ describe('applyHarmonicStack', () => {
     });
   });
 
-  describe('spreadChannels', () => {
-    it('assigns incrementing channels to each layer when enabled', () => {
+  describe('multi-channel routing', () => {
+    it('assigns incrementing channels to each layer', () => {
       const notes = makeNotes(1);
-      const result = applyHarmonicStack(notes, { mode: 'powerChord', spreadChannels: true });
+      const result = applyHarmonicStack(notes, { mode: 'powerChord' });
 
       expect(result).toHaveLength(3);
       expect(result[0].channel).toBeUndefined(); // Original keeps its channel
@@ -149,25 +149,9 @@ describe('applyHarmonicStack', () => {
       expect(result[2].channel).toBe(2); // Octave → ch2
     });
 
-    it('keeps all notes on same channel when disabled', () => {
-      const notes: Note[] = [{ midi: 60, time: 0, duration: 0.5, velocity: 0.8, channel: 3 }];
-      const result = applyHarmonicStack(notes, { mode: 'octave', spreadChannels: false });
-
-      expect(result[0].channel).toBe(3); // Original
-      expect(result[1].channel).toBe(3); // Stacked note keeps original channel
-    });
-
-    it('preserves undefined channel when disabled', () => {
-      const notes: Note[] = [{ midi: 60, time: 0, duration: 0.5, velocity: 0.8 }];
-      const result = applyHarmonicStack(notes, { mode: 'octave', spreadChannels: false });
-
-      expect(result[0].channel).toBeUndefined(); // Original has no channel
-      expect(result[1].channel).toBeUndefined(); // Stacked note preserves undefined
-    });
-
     it('respects base channel and increments from there', () => {
       const notes: Note[] = [{ midi: 60, time: 0, duration: 0.5, velocity: 0.8, channel: 5 }];
-      const result = applyHarmonicStack(notes, { mode: 'triad', spreadChannels: true });
+      const result = applyHarmonicStack(notes, { mode: 'triad' });
 
       expect(result).toHaveLength(3); // Root + 3rd + 5th
       expect(result[0].channel).toBe(5); // Original stays on ch5
@@ -177,7 +161,7 @@ describe('applyHarmonicStack', () => {
 
     it('wraps channel numbers at 16', () => {
       const notes: Note[] = [{ midi: 60, time: 0, duration: 0.5, velocity: 0.8, channel: 14 }];
-      const result = applyHarmonicStack(notes, { mode: 'triad', spreadChannels: true });
+      const result = applyHarmonicStack(notes, { mode: 'triad' });
 
       expect(result[0].channel).toBe(14); // Original
       expect(result[1].channel).toBe(15); // 14 + 1 = 15
@@ -186,7 +170,7 @@ describe('applyHarmonicStack', () => {
 
     it('spreads channels in detune mode', () => {
       const notes = makeNotes(1);
-      const result = applyHarmonicStack(notes, { mode: 'detune', spreadChannels: true });
+      const result = applyHarmonicStack(notes, { mode: 'detune' });
 
       expect(result).toHaveLength(5); // 1 original + 4 detuned
       expect(result[0].channel).toBeUndefined(); // Original
