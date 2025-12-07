@@ -68,10 +68,16 @@ function scheduleNotes(notes: Note[]): void {
   scheduledEvents.forEach(id => window.clearTimeout(id));
   scheduledEvents = [];
 
+  // Minimum duration to ensure gates are registered (approx 5ms)
+  const MIN_DURATION = 0.005;
+
   // Schedule all notes
   notes.forEach(note => {
+    // Enforce minimum duration
+    const duration = Math.max(note.duration, MIN_DURATION);
+
     const noteOnTime = note.time * 1000; // convert to ms
-    const noteOffTime = (note.time + note.duration) * 1000;
+    const noteOffTime = (note.time + duration) * 1000;
     const velocity = Math.round(note.velocity * 127);
 
     // Schedule note on
@@ -142,8 +148,12 @@ export function updateNotes(notes: Note[]): void {
     scheduledEvents = [];
 
     // Schedule notes based on their state relative to current position
+    const MIN_DURATION = 0.005;
+
     notes.forEach(note => {
-      const noteEndTime = note.time + note.duration;
+      // Enforce minimum duration
+      const duration = Math.max(note.duration, MIN_DURATION);
+      const noteEndTime = note.time + duration;
 
       if (note.time > currentPosition) {
         // Note hasn't started yet - schedule both on and off
